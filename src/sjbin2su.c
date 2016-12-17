@@ -9,11 +9,11 @@ int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("\nConvert binary file to SU file.\n\n");
         printf("Parameters:\n");
-        printf("sgin:         Input filename of binary file.\n");
+        printf("sjin:         Input filename of binary file.\n");
         printf("n2:           Number of samples in n2.\n");
         printf("n1:           Number of samples in n1.\n");
         printf("d1:           n1 interval, default = 0.001.\n");
-        printf("sgot:         Output filename of SU file.\n");
+        printf("sjot:         Output filename of SU file.\n");
         sjbasicinformation();
     } else {
         //! Define parameters
@@ -21,11 +21,11 @@ int main(int argc, char *argv[]) {
         int n2, n1;
         float d1;
         //! Read parameters
-        if (!sjmgets("sgin", inputfile)) {
+        if (!sjmgets("sjin", inputfile)) {
             printf("ERROR: Should input binary file in program sgbin2su!\n");
             exit(0);
         }
-        if (!sjmgets("sgot", outputfile)) {
+        if (!sjmgets("sjot", outputfile)) {
             printf("ERROR: Should output SU file in program sgbin2su!\n");
             exit(0);
         }

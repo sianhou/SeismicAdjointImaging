@@ -14,14 +14,14 @@
 #../../bin/sjawsgfd2d svy=marsvy.su vp=marvel.su rec=marrec.su nt=3001 dt=0.001 ompnum=8
 
 # MPI
-mpirun -np 2 ../../bin/sgmpiawsgfd2d svy=marsvy.su vp=marvel.su rec=marrec.su nt=3001 dt=0.001
+mpirun -np 2 ../../bin/sjmpiawsgfd2d svy=marsvy.su vp=marvel.su rec=marrec.su nt=3001 dt=0.001
 
 #-----------------------------------------------------------------------------
 # RTM with GFDXYZ
 #-----------------------------------------------------------------------------
 
 # Openmp
-#../../bin/sgartm2d svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig.su ompnum=8
+#../../bin/sjartm2d svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig.su ompnum=8
 
 # MPI
-mpirun -np 2 ../../bin/sgmpiartm svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig_mpi.su
+mpirun -np 2 ../../bin/sjmpiartm2d svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig_mpi.su

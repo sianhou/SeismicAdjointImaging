@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("\nCreative a sample 2d survey for RTM (writed in int).\n\n");
-        printf("sgin:    Input a velocity file.\n");
+        printf("vel:    Input a velocity file.\n");
         printf("sx0:     Begin of shot in inline(x or n2) direction.\n");
         printf("sz0:     Begin of shot in vertical(z or n1) direction.\n");
         printf("ns:      Number of shots in survey.\n");
@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
         printf("drz:     Interval of receiver in vertical(z or n1) direction in each shot.\n");
         printf("lx0:     Begin of local model in inline(x or n2) direction.\n");
         printf("lxl:     Local model length in inline(x or n2) direction.\n");
-        printf("sgot:    Output name of survey file.\n\n");
+        printf("sjot:    Output name of survey file.\n\n");
         printf("Explain: for (is = 0; is < ns; ++is)\n");
         printf("             sx = sx0 + is*dsx\n");
         printf("             sz = sz0\n");
@@ -28,18 +28,18 @@ int main(int argc, char *argv[]) {
         printf("             for (ir = 0; ir < nr; ++ir)\n");
         printf("                 rx = rx0 + ir*drx + is*dsx\n");
         printf("                 rz = rz0 + ir*drz\n\n");
-        printf("Example: sgsurvey2d sgin=vel.su sx0=11 sz0=5 ns=2 dsx=10 dsz=0\n");
+        printf("Example: sjsurvey2d vel=vel.su sx0=11 sz0=5 ns=2 dsx=10 dsz=0\n");
         printf("                    rx0=51 rz0=5 nr=5 drx=2 drz=0 lx0=0 lxl=201\n");
-        printf("                    sgot=svy.su\n");
+        printf("                    sjot=svy.su\n");
         sjbasicinformation();
     } else {
         char *inputname;
-        if (!sjmgets("sgin", inputname)) {
+        if (!sjmgets("vel", inputname)) {
             printf("ERROR: Should input model in program sgsurvey2d!\n");
             exit(0);
         };
         char *outputname;
-        if (!sjmgets("sgot", outputname)) {
+        if (!sjmgets("sjot", outputname)) {
             printf("ERROR: Should output survey in program sgsurvey2d!\n");
             exit(0);
         };

@@ -9,15 +9,15 @@
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("\nDisplay 2D survey.\n\n");
-        printf("sgin:    Input a survey file.\n");
+        printf("sjin:   Input a survey file.\n");
         printf("is:      The sequence number of shot to display, default = 1.\n");
         printf("         1<= is <= ns.\n\n");
         printf("flag:    1 - Display local information, default = 1.\n");
-        printf("Example: sgdisplaysurvey2d sgin=svy.su\n");
+        printf("Example: sjdisplaysurvey2d sgin=svy.su\n");
         sjbasicinformation();
     } else {
         char *inputname;
-        if (!sjmgets("sgin", inputname)) {
+        if (!sjmgets("sjin", inputname)) {
             printf("ERROR: Should input survey in program sgdisplaysurvey2d!\n");
             exit(0);
         };

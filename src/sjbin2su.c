@@ -53,6 +53,6 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
         fclose(fp);
-        sjcheckfree2d(ptr);
+        sjmcheckfree2d(ptr);
     };
 }

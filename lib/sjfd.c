@@ -156,19 +156,19 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
         memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
     }
 
-    sjfree2d(cp);
+    sjmfree2d(cp);
 
-    sjfree2d(gxl);
-    sjfree2d(gxr);
-    sjfree2d(gzu);
-    sjfree2d(gzb);
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
 
-    sjfree2d(vx0);
-    sjfree2d(vx1);
-    sjfree2d(vz0);
-    sjfree2d(vz1);
-    sjfree2d(p0);
-    sjfree2d(p1);
+    sjmfree2d(vx0);
+    sjmfree2d(vx1);
+    sjmfree2d(vz0);
+    sjmfree2d(vz1);
+    sjmfree2d(p0);
+    sjmfree2d(p1);
 }
 
 //! Two dimension acoustic reverse time simulation based on constant velocity-stress equation
@@ -290,17 +290,17 @@ void sjawrtsgfd2d(int nt, float dt, //! Source
         memcpy(&vz1[0][0], &vz0[0][0], nxb * nzb * sizeof(float));
     }
 
-    sjfree2d(cp);
+    sjmfree2d(cp);
 
-    sjfree2d(gxl);
-    sjfree2d(gxr);
-    sjfree2d(gzu);
-    sjfree2d(gzb);
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
 
-    sjfree2d(vx0);
-    sjfree2d(vx1);
-    sjfree2d(vz0);
-    sjfree2d(vz1);
-    sjfree2d(p0);
-    sjfree2d(p1);
+    sjmfree2d(vx0);
+    sjmfree2d(vx1);
+    sjmfree2d(vz0);
+    sjmfree2d(vz1);
+    sjmfree2d(p0);
+    sjmfree2d(p1);
 }

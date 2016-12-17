@@ -369,6 +369,7 @@ int sjreadsurvey(int is, sury *svy, int *ry, int *rx, int *rz, char *inputname) 
         sjreadsu(ry, 1, nr, sizeof(int), is, nsvy + 0 * nr, inputname);
         sjreadsu(rx, 1, nr, sizeof(int), is, nsvy + 1 * nr, inputname);
         sjreadsu(rz, 1, nr, sizeof(int), is, nsvy + 2 * nr, inputname);
+        return 1;
     } else {
         printf("ERROR: Is exceed ns in function sgbin2su()!");
         return 0;

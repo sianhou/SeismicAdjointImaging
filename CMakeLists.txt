@@ -1,11 +1,11 @@
 cmake_minimum_required(VERSION 3.0)
-project(Seismic_Adjoint_Imaging)
-file(MAKE_DIRECTORY ${Seismic_Adjoint_Imaging_BINARY_DIR}/lib)
-file(MAKE_DIRECTORY ${Seismic_Adjoint_Imaging_BINARY_DIR}/bin)
+project(SeismicAdjointImaging)
+file(MAKE_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/lib)
+file(MAKE_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/bin)
 
 #! Output path
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${Seismic_Adjoint_Imaging_BINARY_DIR}/lib)
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${Seismic_Adjoint_Imaging_BINARY_DIR}/bin)
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/lib)
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/bin)
 
 #--------------------------------------------------------------------------------------------------
 # OpenMP
@@ -26,7 +26,7 @@ set(SJLIB lib/sjabc.c lib/sjfd.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c)
 add_library(sj ${SJLIB} ${SGLIB})
 
 #! RUNTIME
-find_library(sj ${Seismic_Adjoint_Imaging_BINARY_DIR}/lib)
+find_library(sj ${SeismicAdjointImaging_BINARY_DIR}/lib)
 
 #! Test
 set(TEST_ASGFD test/test_asgfd.c)
@@ -68,7 +68,7 @@ if ( MPI_FOUND )
     add_library(mpisj ${SJINC} ${SJLIB})
 
     #! RUNTIME
-    find_library(mpisj ${Seismic_Adjoint_Imaging_BINARY_DIR}/lib)
+    find_library(mpisj ${SeismicAdjointImaging_BINARY_DIR}/lib)
 
     #! sgmpiawsgfd2d
     set(SOURCEFILE mpisrc/sgmpiawsgfd2d.c)

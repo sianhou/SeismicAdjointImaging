@@ -170,9 +170,9 @@ int main(int argc, char *argv[]) {
                    rz[svy.nr - 1] + svy.lz0);
 
             //------------------------ Free memory ------------------------//
-            sjcheckfree2d(lvp);
-            sjcheckfree2d(profile);
-            sjcheckfree3d(snap);
+            sjmcheckfree2d(lvp);
+            sjmcheckfree2d(profile);
+            sjmcheckfree3d(snap);
         }
 
         //------------------------ Information ------------------------//
@@ -186,11 +186,11 @@ int main(int argc, char *argv[]) {
         printf("Constant density acoustic simulation complete - time=%fs.\n", Runtime);
 
         //------------------------ Free memory ------------------------//
-        sjcheckfree1d(wavelet);
-        sjcheckfree1d(ry);
-        sjcheckfree1d(rx);
-        sjcheckfree1d(rz);
-        sjcheckfree2d(gvp);
+        sjmcheckfree1d(wavelet);
+        sjmcheckfree1d(ry);
+        sjmcheckfree1d(rx);
+        sjmcheckfree1d(rz);
+        sjmcheckfree2d(gvp);
     }
     return 0;
 }

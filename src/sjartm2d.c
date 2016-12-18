@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
         printf("srcdecay:     Decay of source, default = 0.4.\n");
         printf("nb:           Range of ABC, default = 15.\n");
         printf("jsnap:        Interval of snap, default = 2.\n");
+        printf("ycutdirect:   Cut direct wave (1: yes, 0: no), default = 1.\n");
         printf("ompnum:       Number of OpenMP threads, default = 4.\n");
         printf("\nExamples:   sjartm2d svy=survey.su vp=vp.su rec=profile.su mig=image.su\n");
         sjbasicinformation();
@@ -82,8 +83,10 @@ int main(int argc, char *argv[]) {
 
         //------------------------ Wavefield ------------------------//
         //! Define parameters
+        int ycutdirect;
         char *recfile;
-        //! Initialize parameters
+        //! Read parameters
+        if (!sjmgeti("ycutdirect", ycutdirect)) ycutdirect = 1;
         if (!sjmgets("rec", recfile)) {
             printf("ERROR: Should input rec in program sgartm2d!\n");
             exit(0);
@@ -173,10 +176,10 @@ int main(int argc, char *argv[]) {
             //------------------------ Forward ------------------------//
             sjawsgfd2d(nt, svy.sx, svy.sz, srcrange, srctrunc, //! Source
                        dt, srcdecay, wavelet,
-                       svy.lxl, svy.lzl, ds, lvp, //! Model
-                       nb, //! Boundary condition
-                       svy.nr, rx, rz, //! Survey
-                       1, jsnap, profilef, snapf); //! Wavefield
+                       svy.lxl, svy.lzl, ds, lvp, nb, //! Model
+                       svy.nr, rx, rz, //! BC & survey
+                       1, jsnap, profilef, snapf, //! Wavefield
+                       ycutdirect);
 
             //------------------------ Backward ------------------------//
             sjawrtsgfd2d(nt, dt, //! Source

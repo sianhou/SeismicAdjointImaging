@@ -24,6 +24,7 @@ int main(int argc, char *argv[]) {
         printf("amp:          Peak amplitude of wavelet, default = 1.0.\n");
         printf("srcdecay:     Decay of source, default = 0.4.\n");
         printf("nb:           Range of ABC, default = 15.\n");
+        printf("ycutdirect:   Cut direct wave (1: yes, 0: no), default = 1.\n");
         printf("ompnum:       Number of OpenMP threads, default = 4.\n");
         printf("\nExamples:   sjawsgfd2d svy=survey.su vp=vp.su rec=profile.su nt=3001\n");
         sjbasicinformation();
@@ -104,12 +105,16 @@ int main(int argc, char *argv[]) {
 
         //------------------------ Wavefield ------------------------//
         //! Define parameters
+        int ycutdirect;
         char *recfile;
+        //! Read parameters
+        if (!sjmgeti("ycutdirect", ycutdirect)) ycutdirect = 1;
         //! Initialize parameters
         if (!sjmgets("rec", recfile)) {
             printf("ERROR: Should output rec in program sjawsgfd2d!\n");
             exit(0);
         }
+
         //------------------------ Start ------------------------//
         printf("\nConstant density acoustic simulation start.\n\n");
 #ifdef GFDOPENMP_
@@ -149,9 +154,9 @@ int main(int argc, char *argv[]) {
             sjawsgfd2d(nt, svy.sx, svy.sz, srcrange, srctrunc, //! Source
                        dt, srcdecay, wavelet,
                        svy.lxl, svy.lzl, ds, lvp, //! Model
-                       nb, //! Boundary condition
-                       svy.nr, rx, rz, //! Survey
-                       0, 1, profile, snap); //! Wavefield
+                       nb, svy.nr, rx, rz, //! BC & survey
+                       0, 1, profile, snap, //! Wavefield
+                       ycutdirect);
 
             //------------------------ Output ------------------------//
             sjwritesu(profile[0], svy.nr, nt, sizeof(float), dt, is, recfile);

@@ -28,10 +28,10 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
                 int nx, int nz, //! Model
                 float ds, float **vp,
                 int nb, //! Boundary condition
-                int nr, //! Survey
-                int *rx, int *rz,
-                int ysnap, int jsnap, //! Wavefield
-                float **record, float ***snap) {
+                int nr, int *rx, int *rz, //! Survey
+                int ysnap, int jsnap,
+                float **record, float ***snap, //! Wavefield
+                int ycutdirect) {
 
     //------------------------ Main loop ------------------------//
     //! Define parameters
@@ -154,6 +154,79 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
         memcpy(vx0[0], vx1[0], nxb * nzb * sizeof(float));
         memcpy(vz0[0], vz1[0], nxb * nzb * sizeof(float));
         memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
+    }
+
+    /**********************************************************************************************/
+    /* ! Cut direct wave                                                                          */
+    /**********************************************************************************************/
+    if(ycutdirect == 1) {
+        //------------------------ Model ------------------------//
+        for(ix = 0; ix < nxb; ix ++)
+            for(iz = 0; iz < nzb; iz ++)
+                cp[ix][iz] = vp[sx-marg-nb][sz-marg-nb];
+
+        //------------------------ Initialization ------------------------//
+        //! Boundary condition
+        sjinitohabc2d(cp, cp, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+        //! Model
+        for (ix = 0; ix < nxb; ix++)
+            for (iz = 0; iz < nzb; iz++)
+                cp[ix][iz] = cp[ix][iz] * cp[ix][iz] * ids;
+        //! Wavefield
+        memset(vx0[0], 0, nxb * nzb * sizeof(float));
+        memset(vx1[0], 0, nxb * nzb * sizeof(float));
+        memset(vz0[0], 0, nxb * nzb * sizeof(float));
+        memset(vz1[0], 0, nxb * nzb * sizeof(float));
+        memset(p0[0], 0, nxb * nzb * sizeof(float));
+        memset(p1[0], 0, nxb * nzb * sizeof(float));
+
+        //! Wavefield exploration
+        for (it = 0; it < nt; it++) {
+            //! Source
+            if (it < srctrunc)
+#ifdef GFDOPENMP_
+#pragma omp parallel for private(ix, iz)
+#endif
+                for (ix = -srcrange; ix <= srcrange; ix++)
+                    for (iz = -srcrange; iz <= srcrange; iz++)
+                        p0[ix + sx][iz + sz] += wav[it] * expf(-srcdecay * (ix * ix + iz * iz));
+
+            //! Calculate veloctiy
+#ifdef GFDOPENMP_
+#pragma omp parallel for private(ix, iz)
+#endif
+            for (ix = marg; ix < nxb - marg; ix++) {
+                for (iz = marg; iz < nzb - marg; iz++) {
+                    vx1[ix][iz] = sjmsgfd2dn2(p0, ix, iz) * ids + vx0[ix][iz];
+                    vz1[ix][iz] = sjmsgfd2dn1(p0, ix, iz) * ids + vz0[ix][iz];
+                }
+            }
+
+            //! Calculate stress
+#ifdef GFDOPENMP_
+#pragma omp parallel for private(ix, iz)
+#endif
+            for (ix = marg; ix < nxb - marg; ix++)
+                for (iz = marg; iz < nzb - marg; iz++)
+                    p1[ix][iz] = cp[ix][iz] * (sjmsgfd2dn2(vx1, ix - 1, iz) + sjmsgfd2dn1(vz1, ix, iz - 1)) + p0[ix][iz];
+
+            //! Boundary condition
+            sjapplyohabc2d(vx1, vx0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+            sjapplyohabc2d(vz1, vz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+            sjapplyohabc2d(p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+            //! Record
+#ifdef GFDOPENMP_
+#pragma omp parallel for private(ir)
+#endif
+            for (ir = 0; ir < nr; ir++)
+                record[ir][it] -= p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+
+            //! Update
+            memcpy(vx0[0], vx1[0], nxb * nzb * sizeof(float));
+            memcpy(vz0[0], vz1[0], nxb * nzb * sizeof(float));
+            memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
+        }
     }
 
     sjmfree2d(cp);

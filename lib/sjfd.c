@@ -4,23 +4,32 @@
 
 #include "sjinc.h"
 
-#define C40 ( 1.239407e+0f)
-#define C41 (-1.105315e-1f)
-#define C42 ( 2.496329e-2f)
-#define C43 (-5.804879e-3f)
-#define C44 ( 9.358680e-4f)
+#define C80 ( 1.234091073174191f)
+#define C81 (-0.106649845794352f)
+#define C82 ( 0.023036366685648f)
+#define C83 (-0.005342385594862f)
+#define C84 ( 0.001077271169328f)
+#define C85 (-0.000166418877398f)
+#define C86 ( 0.000017021711044f)
+#define C87 (-0.000000852346420f)
 
-#define SASGFD2DN1(p, ix, iz) (C40*(p[ix][iz+1]-p[ix][iz-0]) + \
-                             C41*(p[ix][iz+2]-p[ix][iz-1]) + \
-                             C42*(p[ix][iz+3]-p[ix][iz-2]) + \
-                             C43*(p[ix][iz+4]-p[ix][iz-3]) + \
-                             C44*(p[ix][iz+5]-p[ix][iz-4]) )
+#define sjmsgfd2dn1(p, ix, iz) (C80*(p[ix][iz+1]-p[ix][iz-0]) + \
+                                C81*(p[ix][iz+2]-p[ix][iz-1]) + \
+                                C82*(p[ix][iz+3]-p[ix][iz-2]) + \
+                                C83*(p[ix][iz+4]-p[ix][iz-3]) + \
+                                C84*(p[ix][iz+5]-p[ix][iz-4]) + \
+                                C85*(p[ix][iz+6]-p[ix][iz-5]) + \
+                                C86*(p[ix][iz+7]-p[ix][iz-6]) + \
+                                C87*(p[ix][iz+8]-p[ix][iz-7]) )
 
-#define SASGFD2DN2(p, ix, iz) (C40*(p[ix+1][iz]-p[ix-0][iz]) + \
-                             C41*(p[ix+2][iz]-p[ix-1][iz]) + \
-                             C42*(p[ix+3][iz]-p[ix-2][iz]) + \
-                             C43*(p[ix+4][iz]-p[ix-3][iz]) + \
-                             C44*(p[ix+5][iz]-p[ix-4][iz]) )
+#define sjmsgfd2dn2(p, ix, iz) (C80*(p[ix+1][iz]-p[ix-0][iz]) + \
+                                C81*(p[ix+2][iz]-p[ix-1][iz]) + \
+                                C82*(p[ix+3][iz]-p[ix-2][iz]) + \
+                                C83*(p[ix+4][iz]-p[ix-3][iz]) + \
+                                C84*(p[ix+5][iz]-p[ix-4][iz]) + \
+                                C85*(p[ix+6][iz]-p[ix-5][iz]) + \
+                                C86*(p[ix+7][iz]-p[ix-6][iz]) + \
+                                C87*(p[ix+8][iz]-p[ix-7][iz]) )
 
 //! Two dimension acoustic simulation based on constant velocity-stress equation
 void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
@@ -35,11 +44,11 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
 
     //------------------------ Main loop ------------------------//
     //! Define parameters
-    int it, ir, ix, iz, isnap;
+    int it, ir, ix, iz;
 
     //------------------------ Finite difference ------------------------//
     //! Define parameters
-    const int marg = 6;
+    const int marg = 8;
 
     //------------------------ Source ------------------------//
     //! Calculate parameters
@@ -116,8 +125,8 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
 #endif
         for (ix = marg; ix < nxb - marg; ix++) {
             for (iz = marg; iz < nzb - marg; iz++) {
-                vx1[ix][iz] = SASGFD2DN2(p0, ix, iz) * ids + vx0[ix][iz];
-                vz1[ix][iz] = SASGFD2DN1(p0, ix, iz) * ids + vz0[ix][iz];
+                vx1[ix][iz] = sjmsgfd2dn2(p0, ix, iz) * ids + vx0[ix][iz];
+                vz1[ix][iz] = sjmsgfd2dn1(p0, ix, iz) * ids + vz0[ix][iz];
             }
         }
 
@@ -127,7 +136,7 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
 #endif
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                p1[ix][iz] = cp[ix][iz] * (SASGFD2DN2(vx1, ix - 1, iz) + SASGFD2DN1(vz1, ix, iz - 1)) + p0[ix][iz];
+                p1[ix][iz] = cp[ix][iz] * (sjmsgfd2dn2(vx1, ix - 1, iz) + sjmsgfd2dn1(vz1, ix, iz - 1)) + p0[ix][iz];
 
         //! Boundary condition
         sjapplyohabc2d(vx1, vx0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
@@ -257,8 +266,8 @@ void sjawrtsgfd2d(int nt, float dt, //! Source
 #endif
         for (ix = marg; ix < nxb - marg; ix++) {
             for (iz = marg; iz < nzb - marg; iz++) {
-                vx0[ix][iz] = SASGFD2DN2(p1, ix, iz) * ids + vx1[ix][iz];
-                vz0[ix][iz] = SASGFD2DN1(p1, ix, iz) * ids + vz1[ix][iz];
+                vx0[ix][iz] = sjmsgfd2dn2(p1, ix, iz) * ids + vx1[ix][iz];
+                vz0[ix][iz] = sjmsgfd2dn1(p1, ix, iz) * ids + vz1[ix][iz];
             }
         }
 
@@ -268,7 +277,7 @@ void sjawrtsgfd2d(int nt, float dt, //! Source
 #endif
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                p0[ix][iz] = cp[ix][iz] * (SASGFD2DN2(vx0, ix - 1, iz) + SASGFD2DN1(vz0, ix, iz - 1)) + p0[ix][iz];
+                p0[ix][iz] = cp[ix][iz] * (sjmsgfd2dn2(vx0, ix - 1, iz) + sjmsgfd2dn1(vz0, ix, iz - 1)) + p0[ix][iz];
 
         //! Boundary condition
         sjapplyohabc2d(vx0, vx1, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);

@@ -25,7 +25,7 @@ int main(int argc, char *argv[]) {
         printf("nb:           Range of ABC, default = 15.\n");
         printf("jsnap:        Interval of snap, default = 2.\n");
         printf("ompnum:       Number of OpenMP threads, default = 4.\n");
-        printf("\nExamples:   sjrtm2d svy=survey.su vp=vp.su rec=profile.su mig=image.su\n");
+        printf("\nExamples:   sjartm2d svy=survey.su vp=vp.su rec=profile.su mig=image.su\n");
         sjbasicinformation();
     } else {
         //------------------------ Initlization ------------------------//

@@ -5,7 +5,7 @@
 #ifndef SJI_SJINC_H
 #define SJI_SJINC_H
 
-#include <sys/malloc.h>
+#include <malloc.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>

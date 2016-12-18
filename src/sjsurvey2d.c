@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
     if (argc == 1) {
         printf("\nCreative a sample 2d survey for RTM (writed in int).\n\n");
-        printf("vel:    Input a velocity file.\n");
+        printf("vel:     Input a velocity file.\n");
         printf("sx0:     Begin of shot in inline(x or n2) direction.\n");
         printf("sz0:     Begin of shot in vertical(z or n1) direction.\n");
         printf("ns:      Number of shots in survey.\n");
@@ -35,60 +35,60 @@ int main(int argc, char *argv[]) {
     } else {
         char *inputname;
         if (!sjmgets("vel", inputname)) {
-            printf("ERROR: Should input model in program sgsurvey2d!\n");
+            printf("ERROR: Should input model in program sjsurvey2d!\n");
             exit(0);
         };
         char *outputname;
         if (!sjmgets("sjot", outputname)) {
-            printf("ERROR: Should output survey in program sgsurvey2d!\n");
+            printf("ERROR: Should output survey in program sjsurvey2d!\n");
             exit(0);
         };
 
         int sx0, sz0, ns, dsx;
         if (!sjmgeti("sx0", sx0)) {
-            printf("ERROR: Should intput sx0 in program sgsurvey2d!\n");
+            printf("ERROR: Should intput sx0 in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("sz0", sz0)) {
-            printf("ERROR: Should intput sxz in program sgsurvey2d!\n");
+            printf("ERROR: Should intput sxz in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("ns", ns)) {
-            printf("ERROR: Should intput ns in program sgsurvey2d!\n");
+            printf("ERROR: Should intput ns in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("dsx", dsx)) {
-            printf("ERROR: Should intput dsx in program sgsurvey2d!\n");
+            printf("ERROR: Should intput dsx in program sjsurvey2d!\n");
             exit(0);
         };
         int rx0, rz0, nr, drx, drz;
         if (!sjmgeti("rx0", rx0)) {
-            printf("ERROR: Should intput rx0 in program sgsurvey2d!\n");
+            printf("ERROR: Should intput rx0 in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("rz0", rz0)) {
-            printf("ERROR: Should intput rz0 in program sgsurvey2d!\n");
+            printf("ERROR: Should intput rz0 in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("nr", nr)) {
-            printf("ERROR: Should intput nr in program sgsurvey2d!\n");
+            printf("ERROR: Should intput nr in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("drx", drx)) {
-            printf("ERROR: Should intput drx in program sgsurvey2d!\n");
+            printf("ERROR: Should intput drx in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("drz", drz)) {
-            printf("ERROR: Should intput drz in program sgsurvey2d!\n");
+            printf("ERROR: Should intput drz in program sjsurvey2d!\n");
             exit(0);
         };
         int lx0, lxl;
         if (!sjmgeti("lx0", lx0)) {
-            printf("ERROR: Should intput lx0 in program sgsurvey2d!\n");
+            printf("ERROR: Should intput lx0 in program sjsurvey2d!\n");
             exit(0);
         };
         if (!sjmgeti("lxl", lxl)) {
-            printf("ERROR: Should intput mxl in program sgsurvey2d!\n");
+            printf("ERROR: Should intput mxl in program sjsurvey2d!\n");
             exit(0);
         };
 

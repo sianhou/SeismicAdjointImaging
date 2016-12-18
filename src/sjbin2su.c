@@ -14,6 +14,7 @@ int main(int argc, char *argv[]) {
         printf("n1:           Number of samples in n1.\n");
         printf("d1:           n1 interval, default = 0.001.\n");
         printf("sjot:         Output filename of SU file.\n");
+        printf("Example:      sjbin2su sjin=dat.bin n2=301 n1=201 sjot=dat.su\n");
         sjbasicinformation();
     } else {
         //! Define parameters
@@ -22,19 +23,19 @@ int main(int argc, char *argv[]) {
         float d1;
         //! Read parameters
         if (!sjmgets("sjin", inputfile)) {
-            printf("ERROR: Should input binary file in program sgbin2su!\n");
+            printf("ERROR: Should input binary file in program sjbin2su!\n");
             exit(0);
         }
         if (!sjmgets("sjot", outputfile)) {
-            printf("ERROR: Should output SU file in program sgbin2su!\n");
+            printf("ERROR: Should output SU file in program sjbin2su!\n");
             exit(0);
         }
         if (!sjmgeti("n2", n2)) {
-            printf("ERROR: Should input n2 in program sgbin2su!\n");
+            printf("ERROR: Should input n2 in program sjbin2su!\n");
             exit(0);
         }
         if (!sjmgeti("n1", n1)) {
-            printf("ERROR: Should input n1 in program sgbin2su!\n");
+            printf("ERROR: Should input n1 in program sjbin2su!\n");
             exit(0);
         }
         if (!sjmgetf("d1", d1)) d1 = 0.001f;
@@ -49,7 +50,7 @@ int main(int argc, char *argv[]) {
             //! Write data
             sjwritesuall(ptr[0], n2, n1, d1, outputfile);
         } else {
-            printf("ERROR: Cannot open file in program sgbin2su.\n");
+            printf("ERROR: Cannot open file in program sjbin2su.\n");
             exit(0);
         }
         fclose(fp);

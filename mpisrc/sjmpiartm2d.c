@@ -218,7 +218,6 @@ int main(int argc, char *argv[]) {
             sjimagefilter2d(image, svy.lxl, svy.lzl, 1);
 
             sjimage2d(snapf, snapf, nsnap, svy.lxl, svy.lzl, 1, ecimage);
-            sjimagefilter2d(ecimage, svy.lxl, svy.lzl, 1);
 
             //------------------------ Stacking & Information ------------------------//
             if (rankid == 0) {

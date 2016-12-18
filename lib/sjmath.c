@@ -116,14 +116,12 @@ void sjimagefilter2d(float **input, int n2, int n1, int mode) {
 
     memcpy(ptr[0], input[0], n2 * n1 * sizeof(float));
 
-    memset(input[0], 0, n2 * n1 * sizeof(float));
-
 #ifdef GFDOPENMP_
 #pragma omp parallel for private(ix, iz)
 #endif
     for (ix = 6; ix < n2 - 6; ++ix)
         for (iz = 6; iz < n1 - 6; ++iz)
-            input[ix][iz] = SATOFDD2N1(ptr, ix, iz) + SATOFDD2N2(ptr, ix, iz);
+            input[ix][iz] = 4.0f * ptr[ix][iz] - ptr[ix - 1][iz] - ptr[ix + 1][iz] - ptr[ix][iz - 1] - ptr[ix][iz + 1];
 }
 
 //! Process standard input

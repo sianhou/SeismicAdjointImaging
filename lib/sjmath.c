@@ -119,9 +119,9 @@ void sjimagefilter2d(float **input, int n2, int n1, int mode) {
 #ifdef GFDOPENMP_
 #pragma omp parallel for private(ix, iz)
 #endif
-    for (ix = 6; ix < n2 - 6; ++ix)
-        for (iz = 6; iz < n1 - 6; ++iz)
-            input[ix][iz] = 4.0f * ptr[ix][iz] - ptr[ix - 1][iz] - ptr[ix + 1][iz] - ptr[ix][iz - 1] - ptr[ix][iz + 1];
+    for (ix = 2; ix < n2 - 2; ++ix)
+        for (iz = 2; iz < n1 - 2; ++iz)
+            input[ix][iz] = -4.0f * ptr[ix][iz] + ptr[ix - 1][iz] + ptr[ix + 1][iz] + ptr[ix][iz - 1] + ptr[ix][iz + 1];
 }
 
 //! Process standard input

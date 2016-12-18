@@ -24,7 +24,8 @@ int main(int argc, char *argv[]) {
         printf("srcdecay:     Decay of source, default = 0.4.\n");
         printf("nb:           Range of ABC, default = 15.\n");
         printf("jsnap:        Interval of snap, default = 2.\n");
-        printf("ycutdirect:   Cut direct wave (1: yes, 0: no), default = 1.\n");
+        printf("ycutdirect:   Cut direct wave , 0: didn't cut ;\n");
+        printf("                                1: cut direct (default).\n");
         printf("ompnum:       Number of OpenMP threads, default = 4.\n");
         printf("\nExamples:   sjartm2d svy=survey.su vp=vp.su rec=profile.su mig=image.su\n");
         sjbasicinformation();

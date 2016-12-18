@@ -3,7 +3,6 @@
 //
 
 #include "../lib/sjinc.h"
-#include "../lib/sjfile.h"
 
 int main(int argc, char *argv[]) {
 
@@ -24,7 +23,8 @@ int main(int argc, char *argv[]) {
         printf("amp:          Peak amplitude of wavelet, default = 1.0.\n");
         printf("srcdecay:     Decay of source, default = 0.4.\n");
         printf("nb:           Range of ABC, default = 15.\n");
-        printf("ycutdirect:   Cut direct wave (1: yes, 0: no), default = 1.\n");
+        printf("ycutdirect:   Cut direct wave , 0: didn't cut ;\n");
+        printf("                                1: cut direct (default).\n");
         printf("ompnum:       Number of OpenMP threads, default = 4.\n");
         printf("\nExamples:   sjawsgfd2d svy=survey.su vp=vp.su rec=profile.su nt=3001\n");
         sjbasicinformation();

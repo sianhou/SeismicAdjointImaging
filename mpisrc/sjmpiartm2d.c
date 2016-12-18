@@ -33,7 +33,10 @@ int main(int argc, char *argv[]) {
             printf("amp:          Peak amplitude of wavelet, default = 1.0.\n");
             printf("srcdecay:     Decay of source, default = 0.4.\n");
             printf("nb:           Range of ABC, default = 15.\n");
-            printf("ycutdirect:   Cut direct wave (1: yes, 0: no), default = 1.\n");
+            printf("ec:           Energy compensate, 0: no compensate (default);\n");
+            printf("                                 1: source compensate;\n");
+            printf("ycutdirect:   Cut direct wave , 0: didn't cut ;\n");
+            printf("                                1: cut direct (default).\n");
             printf("ompnum:       Number of OpenMP threads, default = 4.\n");
             printf("\nExamples:   sjmpiartm2d svy=survey.gfd vp=vp.gfd rec=profile.gfd mig=image.su\n");
             sjbasicinformation();
@@ -125,8 +128,11 @@ int main(int argc, char *argv[]) {
 
         //------------------------ RTM ------------------------//
         //! Define parameters
+        int ec;
         char *rtmfile;
         float **rtm = NULL;
+        //! Read parameters
+        if (!sjmgeti("ec", ec)) ec = 0;
         if (rankid == 0) {
             rtm = (float **) sjalloc2d(svy.gxl, svy.gzl, sizeof(float));
             //! Calculate parameters
@@ -144,7 +150,7 @@ int main(int argc, char *argv[]) {
 #ifdef GFDOPENMP_
             Tstart = omp_get_wtime();
 #else
-            Tstart = (double)clock();
+            Tstart = (double) clock();
 #endif
         }
 
@@ -154,7 +160,7 @@ int main(int argc, char *argv[]) {
 #ifdef GFDOPENMP_
             tstart = omp_get_wtime();
 #else
-            tstart = (double)clock();
+            tstart = (double) clock();
 #endif
 
             //------------------------ Survey ------------------------//
@@ -182,10 +188,14 @@ int main(int argc, char *argv[]) {
 
             //------------------------ RTM ------------------------//
             //! Define parameters
-            float **image = NULL;
+            float **image = NULL, **ecimage = NULL;
             image = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
+            if (ec == 1)
+                ecimage = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
             //! Calculate parameters
             memset(image[0], 0, svy.lxl * svy.lzl * sizeof(float));
+            if (ec == 1)
+                memset(ecimage[0], 0, svy.lxl * svy.lzl * sizeof(float));
 
             //------------------------ Forward ------------------------//
             sjawsgfd2d(nt, svy.sx, svy.sz, srcrange, srctrunc, //! Source
@@ -207,6 +217,12 @@ int main(int argc, char *argv[]) {
 
             sjimagefilter2d(image, svy.lxl, svy.lzl, 1);
 
+            if (ec == 1) {
+                sjimage2d(snapf, snapf, nsnap, svy.lxl, svy.lzl, 1, ecimage);
+                sjimagefilter2d(ecimage, svy.lxl, svy.lzl, 1);
+                sjprojdiveq2d(image, ecimage, 0, 0, svy.lxl, svy.lzl);
+            }
+
             //------------------------ Commuication & Information ------------------------//
             if (rankid == 0) {
                 //! Stack in rank == 0
@@ -216,7 +232,7 @@ int main(int argc, char *argv[]) {
                 tend = omp_get_wtime();
                 runtime = tend - tstart;
 #else
-                tend = (double)clock();
+                tend = (double) clock();
                 runtime = (tend - tstart) / CLOCKS_PER_SEC;
 #endif
 
@@ -243,7 +259,7 @@ int main(int argc, char *argv[]) {
                 tend = omp_get_wtime();
                 runtime = tend - tstart;
 #else
-                tend = (double)clock();
+                tend = (double) clock();
                 runtime = (tend - tstart) / CLOCKS_PER_SEC;
 #endif
 
@@ -274,7 +290,7 @@ int main(int argc, char *argv[]) {
             Tend = omp_get_wtime();
             Runtime = Tend - Tstart;
 #else
-            Tend = (double)clock();
+            Tend = (double) clock();
             Runtime = (Tend - Tstart) / CLOCKS_PER_SEC;
 #endif
             printf("Acoustic RTM complete - time=%fs.\n", Runtime);

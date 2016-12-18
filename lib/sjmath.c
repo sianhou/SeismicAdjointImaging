@@ -94,7 +94,7 @@ void sjprojdiveq2d(float **input0, float **input1, int x0, int z0, int nx, int n
     int ix, iz;
     for (ix = 0; ix < nx; ++ix)
         for (iz = 0; iz < nz; ++iz)
-            input0[x0 + ix][z0 + iz] /= (input1[ix][iz] + 1.0e-6f);
+            input0[x0 + ix][z0 + iz] /= (input1[ix][iz]);
 }
 
 void sjimage2d(float ***input1, float ***input2, int nt, int nx, int nz, int mode, float **output) {

@@ -4,32 +4,23 @@
 
 #include "sjinc.h"
 
-#define C80 ( 1.234091e+0f)
-#define C81 (-1.066498e-1f)
-#define C82 ( 2.303637e-2f)
-#define C83 (-5.342386e-3f)
-#define C84 ( 1.077271e-4f)
-#define C85 (-1.664189e-4f)
-#define C86 ( 1.702171e-5f)
-#define C87 (-8.523464e-5f)
+#define C50 ( 1.239407e+0f)
+#define C51 (-1.105315e-1f)
+#define C52 ( 2.496329e-2f)
+#define C53 (-5.804879e-3f)
+#define C54 ( 9.358680e-4f)
 
-#define sjmsgfd2dn1(p, ix, iz) (C80*(p[ix][iz+1]-p[ix][iz-0]) + \
-                                C81*(p[ix][iz+2]-p[ix][iz-1]) + \
-                                C82*(p[ix][iz+3]-p[ix][iz-2]) + \
-                                C83*(p[ix][iz+4]-p[ix][iz-3]) + \
-                                C84*(p[ix][iz+5]-p[ix][iz-4]) + \
-                                C85*(p[ix][iz+6]-p[ix][iz-5]) + \
-                                C86*(p[ix][iz+7]-p[ix][iz-6]) + \
-                                C87*(p[ix][iz+8]-p[ix][iz-7]) )
+#define sjmsgfd2dn1(p, ix, iz) (C50*(p[ix][iz+1]-p[ix][iz-0]) + \
+                                C51*(p[ix][iz+2]-p[ix][iz-1]) + \
+                                C52*(p[ix][iz+3]-p[ix][iz-2]) + \
+                                C53*(p[ix][iz+4]-p[ix][iz-3]) + \
+                                C54*(p[ix][iz+5]-p[ix][iz-4]) )
 
-#define sjmsgfd2dn2(p, ix, iz) (C80*(p[ix+1][iz]-p[ix-0][iz]) + \
-                                C81*(p[ix+2][iz]-p[ix-1][iz]) + \
-                                C82*(p[ix+3][iz]-p[ix-2][iz]) + \
-                                C83*(p[ix+4][iz]-p[ix-3][iz]) + \
-                                C84*(p[ix+5][iz]-p[ix-4][iz]) + \
-                                C85*(p[ix+6][iz]-p[ix-5][iz]) + \
-                                C86*(p[ix+7][iz]-p[ix-6][iz]) + \
-                                C87*(p[ix+8][iz]-p[ix-7][iz]) )
+#define sjmsgfd2dn2(p, ix, iz) (C50*(p[ix+1][iz]-p[ix-0][iz]) + \
+                                C51*(p[ix+2][iz]-p[ix-1][iz]) + \
+                                C52*(p[ix+3][iz]-p[ix-2][iz]) + \
+                                C53*(p[ix+4][iz]-p[ix-3][iz]) + \
+                                C54*(p[ix+5][iz]-p[ix-4][iz]) )
 
 //! Two dimension acoustic simulation based on constant velocity-stress equation
 void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
@@ -48,7 +39,7 @@ void sjawsgfd2d(int nt, int sx, int sz, int srcrange, int srctrunc, //! Source
 
     //------------------------ Finite difference ------------------------//
     //! Define parameters
-    const int marg = 8;
+    const int marg = 6;
 
     //------------------------ Source ------------------------//
     //! Calculate parameters
@@ -196,7 +187,7 @@ void sjawrtsgfd2d(int nt, float dt, //! Source
 
     //------------------------ Finite difference ------------------------//
     //! Define parameters
-    const int marg = 8;
+    const int marg = 6;
 
     //------------------------ Model ------------------------//
     //! Define parameters

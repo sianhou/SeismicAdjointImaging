@@ -4,14 +4,14 @@
 
 #include "sjinc.h"
 
-#define C80 ( 1.234091073174191f)
-#define C81 (-0.106649845794352f)
-#define C82 ( 0.023036366685648f)
-#define C83 (-0.005342385594862f)
-#define C84 ( 0.001077271169328f)
-#define C85 (-0.000166418877398f)
-#define C86 ( 0.000017021711044f)
-#define C87 (-0.000000852346420f)
+#define C80 ( 1.234091e+0f)
+#define C81 (-1.066498e-1f)
+#define C82 ( 2.303637e-2f)
+#define C83 (-5.342386e-3f)
+#define C84 ( 1.077271e-4f)
+#define C85 (-1.664189e-4f)
+#define C86 ( 1.702171e-5f)
+#define C87 (-8.523464e-5f)
 
 #define sjmsgfd2dn1(p, ix, iz) (C80*(p[ix][iz+1]-p[ix][iz-0]) + \
                                 C81*(p[ix][iz+2]-p[ix][iz-1]) + \
@@ -196,7 +196,7 @@ void sjawrtsgfd2d(int nt, float dt, //! Source
 
     //------------------------ Finite difference ------------------------//
     //! Define parameters
-    const int marg = 6;
+    const int marg = 8;
 
     //------------------------ Model ------------------------//
     //! Define parameters

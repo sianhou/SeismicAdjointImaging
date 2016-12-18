@@ -35,8 +35,8 @@ int main(int argc, char *argv[]) {
             printf("nb:           Range of ABC, default = 15.\n");
             printf("ec:           Energy compensate, 0: no compensate (default);\n");
             printf("                                 1: source compensate;\n");
-            printf("ycutdirect:   Cut direct wave , 0: didn't cut ;\n");
-            printf("                                1: cut direct (default).\n");
+            printf("ycutdirect:   Cut direct wave, 0: didn't cut ;\n");
+            printf("                               1: cut direct (default).\n");
             printf("ompnum:       Number of OpenMP threads, default = 4.\n");
             printf("\nExamples:   sjmpiartm2d svy=survey.gfd vp=vp.gfd rec=profile.gfd mig=image.su\n");
             sjbasicinformation();
@@ -130,18 +130,21 @@ int main(int argc, char *argv[]) {
         //! Define parameters
         int ec;
         char *rtmfile;
-        float **rtm = NULL;
+        float **rtm = NULL, **ecrtm = NULL;
         //! Read parameters
         if (!sjmgeti("ec", ec)) ec = 0;
         if (rankid == 0) {
-            rtm = (float **) sjalloc2d(svy.gxl, svy.gzl, sizeof(float));
-            //! Calculate parameters
-            memset(rtm[0], 0, svy.gxl * svy.gzl * sizeof(float));
             //! Initialize parameters
             if (!sjmgets("mig", rtmfile)) {
                 printf("ERROR: Should output mig in program sgartm2d!\n");
                 exit(0);
             }
+            //! Allocate memory
+            rtm = (float **) sjalloc2d(svy.gxl, svy.gzl, sizeof(float));
+            ecrtm = (float **) sjalloc2d(svy.gxl, svy.gzl, sizeof(float));
+            //! Calculate parameters
+            memset(rtm[0], 0, svy.gxl * svy.gzl * sizeof(float));
+            memset(ecrtm[0], 0, svy.gxl * svy.gzl * sizeof(float));
         }
 
         //------------------------ Start ------------------------//
@@ -190,12 +193,10 @@ int main(int argc, char *argv[]) {
             //! Define parameters
             float **image = NULL, **ecimage = NULL;
             image = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
-            if (ec == 1)
-                ecimage = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
+            ecimage = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
             //! Calculate parameters
             memset(image[0], 0, svy.lxl * svy.lzl * sizeof(float));
-            if (ec == 1)
-                memset(ecimage[0], 0, svy.lxl * svy.lzl * sizeof(float));
+            memset(ecimage[0], 0, svy.lxl * svy.lzl * sizeof(float));
 
             //------------------------ Forward ------------------------//
             sjawsgfd2d(nt, svy.sx, svy.sz, srcrange, srctrunc, //! Source
@@ -214,19 +215,17 @@ int main(int argc, char *argv[]) {
 
             //------------------------ Image ------------------------//
             sjimage2d(snapf, snapb, nsnap, svy.lxl, svy.lzl, 1, image);
-
             sjimagefilter2d(image, svy.lxl, svy.lzl, 1);
 
-            if (ec == 1) {
-                sjimage2d(snapf, snapf, nsnap, svy.lxl, svy.lzl, 1, ecimage);
-                sjimagefilter2d(ecimage, svy.lxl, svy.lzl, 1);
-                sjprojdiveq2d(image, ecimage, 0, 0, svy.lxl, svy.lzl);
-            }
+            sjimage2d(snapf, snapf, nsnap, svy.lxl, svy.lzl, 1, ecimage);
+            sjimagefilter2d(ecimage, svy.lxl, svy.lzl, 1);
 
-            //------------------------ Commuication & Information ------------------------//
+            //------------------------ Stacking & Information ------------------------//
             if (rankid == 0) {
                 //! Stack in rank == 0
                 sjprojaddeq2d(rtm, image, svy.lx0, svy.lz0, svy.lxl, svy.lzl);
+                sjprojaddeq2d(ecrtm, ecimage, svy.lx0, svy.lz0, svy.lxl, svy.lzl);
+
                 //! Information
 #ifdef GFDOPENMP_
                 tend = omp_get_wtime();
@@ -235,25 +234,34 @@ int main(int argc, char *argv[]) {
                 tend = (double) clock();
                 runtime = (tend - tstart) / CLOCKS_PER_SEC;
 #endif
-
                 printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, ns, runtime);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
                        svy.sx + svy.lx0, svy.sz + svy.lz0, rx[0] + svy.lx0, rx[svy.nr - 1] + svy.lx0, rz[0] + svy.lz0,
                        rz[svy.nr - 1] + svy.lz0);
-                //! Communication in rank != 0
+
+                //! Stack in rank != 0
                 for (mpiid = 1; mpiid < nrank; mpiid++) {
                     if ((is + mpiid) < ns) {
                         //! Get model parameters
-                        MPI_Recv(&svy, sjgetsvynum(), MPI_INT, mpiid, 98, MPI_COMM_WORLD, &stauts);
-                        //! Free & Allocate memory
+                        MPI_Recv(&svy, sjgetsvynum(), MPI_INT, mpiid, 97, MPI_COMM_WORLD, &stauts);
+                        //! Commuicaion
                         sjmcheckfree2d(image);
+                        sjmcheckfree2d(ecimage);
                         image = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
-                        MPI_Recv(image[0], svy.lxl * svy.lzl, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
-                        //! Stack in rank != 0
+                        ecimage = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
+                        MPI_Recv(image[0], svy.lxl * svy.lzl, MPI_FLOAT, mpiid, 98, MPI_COMM_WORLD, &stauts);
+                        MPI_Recv(ecimage[0], svy.lxl * svy.lzl, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
+                        //! Stack
                         sjprojaddeq2d(rtm, image, svy.lx0, svy.lz0, svy.lxl, svy.lzl);
+                        sjprojaddeq2d(ecrtm, ecimage, svy.lx0, svy.lz0, svy.lxl, svy.lzl);
                     }
                 }
             } else {
+                //! Commuicaion
+                MPI_Send(&svy, sjgetsvynum(), MPI_INT, 0, 97, MPI_COMM_WORLD);
+                MPI_Send(image[0], svy.lxl * svy.lzl, MPI_FLOAT, 0, 98, MPI_COMM_WORLD);
+                MPI_Send(ecimage[0], svy.lxl * svy.lzl, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
+
                 //! Information
 #ifdef GFDOPENMP_
                 tend = omp_get_wtime();
@@ -262,10 +270,6 @@ int main(int argc, char *argv[]) {
                 tend = (double) clock();
                 runtime = (tend - tstart) / CLOCKS_PER_SEC;
 #endif
-
-                //! Commuicaion
-                MPI_Send(&svy, sjgetsvynum(), MPI_INT, 0, 98, MPI_COMM_WORLD);
-                MPI_Send(image[0], svy.lxl * svy.lzl, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
                 printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, ns, runtime);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
                        svy.sx + svy.lx0, svy.sz + svy.lz0, rx[0] + svy.lx0, rx[svy.nr - 1] + svy.lx0, rz[0] + svy.lz0,
@@ -279,9 +283,14 @@ int main(int argc, char *argv[]) {
             sjmcheckfree3d(snapf);
             sjmcheckfree3d(snapb);
             sjmcheckfree2d(image);
+            sjmcheckfree2d(ecimage);
         }
 
         if (rankid == 0) {
+            //------------------------ Source Compensate ------------------------//
+            if(ec==1)
+                sjprojdiveq2d(rtm, ecrtm, 0, 0, svy.gxl, svy.gzl);
+
             //------------------------ Output ------------------------//
             sjwritesuall(rtm[0], svy.gxl, svy.gzl, ds, rtmfile);
 
@@ -301,6 +310,7 @@ int main(int argc, char *argv[]) {
             sjmcheckfree1d(rz);
             sjmcheckfree2d(gvp);
             sjmcheckfree2d(rtm);
+            sjmcheckfree2d(ecrtm);
         } else {
             sjmcheckfree1d(wavelet);
             sjmcheckfree1d(rx);

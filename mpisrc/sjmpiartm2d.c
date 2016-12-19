@@ -4,6 +4,9 @@
 #include <mpi.h>
 #include "../lib/sjinc.h"
 
+void sjprintfinfo();
+
+
 int main(int argc, char *argv[]) {
 
     //------------------------ Initlization ------------------------//
@@ -17,41 +20,13 @@ int main(int argc, char *argv[]) {
 
     if (argc == 1) {
         if (rankid == 0) {
-            printf("\n2D acoustic RTM using constant density velocity-stress equation.\n\n");
-            printf("Parameters:\n");
-            printf("svy:          Input filename of seismic survey.\n");
-            printf("vp:           Input filename of seismic P-model.\n");
-            printf("rec:          Input filename of seismic profile.\n");
-            printf("mig:          Output filename of RTM image (SU).\n");
-            printf("Other parameters:\n");
-            printf("dt:           Interval of time(s), default = 0.001.\n");
-            printf("ds:           Interval of space(m), default = 10.0.\n");
-            printf("k1:           Peak position of wavelet, default = 30.\n");
-            printf("srcrange:     Total range of source, default = 10.\n");
-            printf("srctrunc:     Total time of source, default = 301.\n");
-            printf("fp:           Peak frequency of wavelet, default = 20.\n");
-            printf("amp:          Peak amplitude of wavelet, default = 1.0.\n");
-            printf("srcdecay:     Decay of source, default = 0.4.\n");
-            printf("nb:           Range of ABC, default = 15.\n");
-            printf("ec:           Energy compensate, 0: no compensate (default);\n");
-            printf("                                 1: source compensate;\n");
-            printf("ycutdirect:   Cut direct wave, 0: didn't cut ;\n");
-            printf("                               1: cut direct (default).\n");
-            printf("ompnum:       Number of OpenMP threads, default = 4.\n");
-            printf("\nExamples:   sjmpiartm2d svy=survey.gfd vp=vp.gfd rec=profile.gfd mig=image.su\n");
-            sjbasicinformation();
+            sjprintfinfo();
         }
     } else {
         //------------------------ Initlization ------------------------//
         //! Define parameters
-        int is = 0, ompnum;
-        double tstart, tend, Tstart, Tend, runtime, Runtime;
-        //! Read parameters
-        if (!sjmgeti("ompnum", ompnum)) ompnum = 4;
-        //! Set parameters
-#ifdef GFDOPENMP_
-        omp_set_num_threads(ompnum);
-#endif
+        int is = 0;
+        double tstart, tend, Tstart, Tend;
 
         //------------------------ Boundary condition ------------------------//
         //! Define parameters
@@ -66,7 +41,7 @@ int main(int argc, char *argv[]) {
         int *ry = NULL, *rx = NULL, *rz = NULL;
         //! Read parameters
         if (!sjmgets("svy", svyfile)) {
-            printf("ERROR: Should input survey in program sgawsgfd2d!\n");
+            printf("ERROR: Should input survey in program sgmpiartm2d!\n");
             exit(0);
         }
         ns = sjgetsvyns(svyfile);
@@ -84,7 +59,7 @@ int main(int argc, char *argv[]) {
         //! Initialize parameters
         if (!sjmgetf("ds", ds)) ds = 10.0;
         if (!sjmgets("vp", vpfile)) {
-            printf("ERROR: Should input vp in program sgartm2d!\n");
+            printf("ERROR: Should input vp in program sgmpiartm2d!\n");
             exit(0);
         }
         //! Read parameters
@@ -101,7 +76,7 @@ int main(int argc, char *argv[]) {
         //! Read parameters
         if (!sjmgeti("ycutdirect", ycutdirect)) ycutdirect = 1;
         if (!sjmgets("rec", recfile)) {
-            printf("ERROR: Should input rec in program sgartm2d!\n");
+            printf("ERROR: Should input rec in program sgmpiartm2d!\n");
             exit(0);
         }
 
@@ -136,7 +111,7 @@ int main(int argc, char *argv[]) {
         if (rankid == 0) {
             //! Initialize parameters
             if (!sjmgets("mig", rtmfile)) {
-                printf("ERROR: Should output mig in program sgartm2d!\n");
+                printf("ERROR: Should output mig in program sgmpiartm2d!\n");
                 exit(0);
             }
             //! Allocate memory
@@ -150,21 +125,13 @@ int main(int argc, char *argv[]) {
         //------------------------ Start ------------------------//
         if (rankid == 0) {
             printf("\nAcoustic RTM start.\n\n");
-#ifdef GFDOPENMP_
-            Tstart = omp_get_wtime();
-#else
             Tstart = (double) clock();
-#endif
         }
 
         for (is = rankid; is < ns; is += nrank) {
             //------------------------ Information ------------------------//
             //! Time
-#ifdef GFDOPENMP_
-            tstart = omp_get_wtime();
-#else
             tstart = (double) clock();
-#endif
 
             //------------------------ Survey ------------------------//
             //! Read parameters
@@ -226,14 +193,9 @@ int main(int argc, char *argv[]) {
                 sjprojaddeq2d(ecrtm, ecimage, svy.lx0, svy.lz0, svy.lxl, svy.lzl);
 
                 //! Information
-#ifdef GFDOPENMP_
-                tend = omp_get_wtime();
-                runtime = tend - tstart;
-#else
                 tend = (double) clock();
-                runtime = (tend - tstart) / CLOCKS_PER_SEC;
-#endif
-                printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, ns, runtime);
+
+                printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, ns, (tend - tstart) / CLOCKS_PER_SEC);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
                        svy.sx + svy.lx0, svy.sz + svy.lz0, rx[0] + svy.lx0, rx[svy.nr - 1] + svy.lx0, rz[0] + svy.lz0,
                        rz[svy.nr - 1] + svy.lz0);
@@ -262,14 +224,9 @@ int main(int argc, char *argv[]) {
                 MPI_Send(ecimage[0], svy.lxl * svy.lzl, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
 
                 //! Information
-#ifdef GFDOPENMP_
-                tend = omp_get_wtime();
-                runtime = tend - tstart;
-#else
                 tend = (double) clock();
-                runtime = (tend - tstart) / CLOCKS_PER_SEC;
-#endif
-                printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, ns, runtime);
+
+                printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, ns, (tend - tstart) / CLOCKS_PER_SEC);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
                        svy.sx + svy.lx0, svy.sz + svy.lz0, rx[0] + svy.lx0, rx[svy.nr - 1] + svy.lx0, rz[0] + svy.lz0,
                        rz[svy.nr - 1] + svy.lz0);
@@ -294,14 +251,8 @@ int main(int argc, char *argv[]) {
             sjwritesuall(rtm[0], svy.gxl, svy.gzl, ds, rtmfile);
 
             //------------------------ Information ------------------------//
-#ifdef GFDOPENMP_
-            Tend = omp_get_wtime();
-            Runtime = Tend - Tstart;
-#else
             Tend = (double) clock();
-            Runtime = (Tend - Tstart) / CLOCKS_PER_SEC;
-#endif
-            printf("Acoustic RTM complete - time=%fs.\n", Runtime);
+            printf("Acoustic RTM complete - time=%fs.\n", (Tend - Tstart) / CLOCKS_PER_SEC);
 
             //------------------------ Free memory ------------------------//
             sjmcheckfree1d(wavelet);
@@ -322,4 +273,28 @@ int main(int argc, char *argv[]) {
     MPI_Finalize();
 
     return 0;
+}
+void sjprintfinfo() {
+    printf("\n2D acoustic RTM using constant density velocity-stress equation.\n\n");
+    printf("Parameters:\n");
+    printf("svy:          Input filename of seismic survey.\n");
+    printf("vp:           Input filename of seismic P-model.\n");
+    printf("rec:          Input filename of seismic profile.\n");
+    printf("mig:          Output filename of RTM image (SU).\n");
+    printf("Other parameters:\n");
+    printf("dt:           Interval of time(s), default = 0.001.\n");
+    printf("ds:           Interval of space(m), default = 10.0.\n");
+    printf("k1:           Peak position of wavelet, default = 30.\n");
+    printf("srcrange:     Total range of source, default = 10.\n");
+    printf("srctrunc:     Total time of source, default = 301.\n");
+    printf("fp:           Peak frequency of wavelet, default = 20.\n");
+    printf("amp:          Peak amplitude of wavelet, default = 1.0.\n");
+    printf("srcdecay:     Decay of source, default = 0.4.\n");
+    printf("nb:           Range of ABC, default = 15.\n");
+    printf("ec:           Energy compensate, 0: no compensate (default);\n");
+    printf("                                 1: source compensate;\n");
+    printf("ycutdirect:   Cut direct wave, 0: didn't cut ;\n");
+    printf("                               1: cut direct (default).\n");
+    printf("\nExamples:   sjmpiartm2d svy=survey.gfd vp=vp.gfd rec=profile.gfd mig=image.su\n");
+    sjbasicinformation();
 }

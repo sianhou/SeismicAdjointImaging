@@ -17,7 +17,7 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
     //! Time
     if (rankid == 0) {
         Tstart = (double) clock();
-        printf("---------------- 2D Acoustic RTM start  ----------------\n");
+        printf("---------------- 2D Acoustic RTM start ----------------\n");
     }
 
     float **mig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));

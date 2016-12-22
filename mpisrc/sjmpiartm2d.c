@@ -84,11 +84,12 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
     MPI_Reduce(nmig[0], gnmig[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
 
-    //! Source compenate
-    sjprojdiveq2d(geo->gipp2d, gnmig, 0, 0, survey->gnx, survey->gnz);
-
-    //------------------------ Information ------------------------//
     if (rankid == 0) {
+
+        //! Source compenate
+        sjprojdiveq2d(geo->gipp2d, gnmig, 0, 0, survey->gnx, survey->gnz);
+
+        //! Time
         Tend = (double) clock();
         printf("Acoustic RTM complete - time=%fs.\n", (Tend - Tstart) / CLOCKS_PER_SEC);
     }
@@ -148,7 +149,9 @@ int main(int argc, char *argv[]) {
         sjartm2d(&source, &survey, &geo2d, &wave2d);
 
         //! Output
-        sjwritesuall(geo2d.gipp2d[0], survey.gnx, survey.gnz, geo2d.ds, geo2d.ippfile);
+        if (rankid == 0) {
+            sjwritesuall(geo2d.gipp2d[0], survey.gnx, survey.gnz, geo2d.ds, geo2d.ippfile);
+        }
 
     } else {
         printf("\nExamples:   sjmpiartm2d survey=survey.su vp=vp.su recz=recz.su ipp=mig.su\n");

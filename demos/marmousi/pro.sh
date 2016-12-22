@@ -18,8 +18,5 @@ mpirun -np 2 $path/sjmpiawfd2d survey=marsvy.su vp=marvel.su recz=marrec.su nt=3
 # RTM
 #-----------------------------------------------------------------------------
 
-# Openmp
-#../../bin/sjartm2d svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig.su ompnum=8
-
 # MPI
 mpirun -np 2 $path/sjmpiartm2d survey=marsvy.su vp=marvel.su recz=marrec.su mig=marmig.su nt=3001 dt=0.001

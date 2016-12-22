@@ -84,9 +84,6 @@ void sjextract2d(float **input, int x0, int z0, int nx, int nz, float **output) 
 
 void sjprojaddeq2d(float **input0, float **input1, int x0, int z0, int nx, int nz) {
     int ix, iz;
-#ifdef GFDOPENMP_
-#pragma omp parallel for private(ix, iz)
-#endif
     for (ix = 0; ix < nx; ++ix)
         for (iz = 0; iz < nz; ++iz)
             input0[x0 + ix][z0 + iz] += input1[ix][iz];
@@ -99,28 +96,13 @@ void sjprojdiveq2d(float **input0, float **input1, int x0, int z0, int nx, int n
             input0[x0 + ix][z0 + iz] /= (input1[ix][iz] + 1.0e-4);
 }
 
-void sjimage2d(float ***input1, float ***input2, int nt, int nx, int nz, int mode, float **output) {
-    int ix, iz, it;
-    memset(output[0], 0, nx * nz * sizeof(float));
-#ifdef GFDOPENMP_
-#pragma omp parallel for private(ix, iz, it)
-#endif
-    for (it = 0; it < nt; ++it)
-        for (ix = 0; ix < nx; ++ix)
-            for (iz = 0; iz < nz; ++iz)
-                output[ix][iz] += input1[it][ix][iz] * input2[it][ix][iz];
-}
-
-void sjimagefilter2d(float **input, int n2, int n1, int mode) {
+void sjlaplcefilter2d(float **input, int n2, int n1) {
     int ix, iz;
 
     float **ptr = (float **) sjalloc2d(n2, n1, sizeof(float));
 
     memcpy(ptr[0], input[0], n2 * n1 * sizeof(float));
 
-#ifdef GFDOPENMP_
-#pragma omp parallel for private(ix, iz)
-#endif
     for (ix = 2; ix < n2 - 2; ++ix)
         for (iz = 2; iz < n1 - 2; ++iz)
             input[ix][iz] = -4.0f * ptr[ix][iz] + ptr[ix - 1][iz] + ptr[ix + 1][iz] + ptr[ix][iz - 1] + ptr[ix][iz + 1];

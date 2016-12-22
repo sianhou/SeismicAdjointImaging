@@ -74,6 +74,12 @@ if ( MPI_FOUND )
     set(SOURCEFILE mpisrc/sjmpiawsgfd2d.c)
     add_executable(sjmpiawsgfd2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiawsgfd2d mpisj m)
+
+    #! sgmpiawfd2d
+    set(SOURCEFILE mpisrc/sjmpiawfd2d.c)
+    add_executable(sjmpiawfd2d ${SOURCEFILE} ${SJINC})
+    target_link_libraries(sjmpiawfd2d mpisj m)
+
     #! sgmpiartm2d
     set(SOURCEFILE mpisrc/sjmpiartm2d.c)
     add_executable(sjmpiartm2d ${SOURCEFILE} ${SJINC})

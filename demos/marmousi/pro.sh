@@ -12,7 +12,7 @@ $path/sjsurvey2d vel=marvel.su sx0=361 sz0=5 ns=2 dsx=10 dsz=0 rx0=211 rz0=5 nr=
 # Simulation
 #-----------------------------------------------------------------------------
 
-mpirun -np 2 $path/sjmpiawsgfd2d survey=marsvy.su vp=marvel.su recz=marrec.su nt=3001 dt=0.001
+mpirun -np 2 $path/sjmpiawfd2d survey=marsvy.su vp=marvel.su recz=marrec.su nt=3001
 
 #-----------------------------------------------------------------------------
 # RTM

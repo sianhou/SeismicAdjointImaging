@@ -53,10 +53,9 @@ typedef struct {
     float ds;
     float **gvp2d, **gvs2d;
     float **vp2d, **vs2d;
-    float **gppimage2d;
-    float **ppimage2d;
-    float **ppecimage2d;
-    char *vpfile, *vsfile;
+    float **gipp2d;
+    float **ipp2d, **nipp2d;
+    char *vpfile, *vsfile, *ippfile;
 } sjsgeo;
 
 //! wave
@@ -65,6 +64,8 @@ typedef struct {
     float **recy, **recx, **recz;
     float ***snapy2d, ***snapx2d, ***snapz2d;
     char *recyfile, *recxfile, *reczfile;
+    int yadjointbc; //! == 1: process adjoint wavefield as boundary condition
+                    //! != 1: process adjoint wavefield as source
 } sjswave;
 
 #define pi 3.141592653589793

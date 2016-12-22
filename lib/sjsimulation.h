@@ -25,6 +25,43 @@
                                 C53*(p[ix+4][iz]-p[ix-3][iz]) + \
                                 C54*(p[ix+5][iz]-p[ix-4][iz]) )
 
+#define B60 (-2.982778e+0f)
+#define B61 ( 1.714286e+0f)
+#define B62 (-2.678571e-1f)
+#define B63 ( 5.291005e-2f)
+#define B64 (-8.928571e-3f)
+#define B65 ( 1.038961e-3f)
+#define B66 (-6.012506e-5f)
+
+#define B611  0.562500000000
+#define B612 -0.112500000000
+#define B613  0.012500000000
+#define B622  0.022500000000
+#define B623 -0.002500000000
+#define B633  0.000277777778
+
+#define sjmfd2dn1(a, ix, iz)( B60* a[ix][iz]+ \
+                            B61*(a[ix][iz+1]+a[ix][iz-1]) + \
+                            B62*(a[ix][iz+2]+a[ix][iz-2]) + \
+                            B63*(a[ix][iz+3]+a[ix][iz-3]) + \
+                            B64*(a[ix][iz+4]+a[ix][iz-4]) + \
+                            B65*(a[ix][iz+5]+a[ix][iz-5]) + \
+                            B66*(a[ix][iz+6]+a[ix][iz-6]) )
+
+#define sjmfd2dn2(a, ix, iz)( B60* a[ix][iz]+ \
+                            B61*(a[ix+1][iz]+a[ix-1][iz]) + \
+                            B62*(a[ix+2][iz]+a[ix-2][iz]) + \
+                            B63*(a[ix+3][iz]+a[ix-3][iz]) + \
+                            B64*(a[ix+4][iz]+a[ix-4][iz]) + \
+                            B65*(a[ix+5][iz]+a[ix-5][iz]) + \
+                            B66*(a[ix+6][iz]+a[ix-6][iz]) )
+
+#define sjmfd2dnc(a, ix, iz)( B611*(a[ix+1][iz+1]-a[ix-1][iz+1]-a[ix+1][iz-1]+a[ix-1][iz-1]) + \
+                            B612*(a[ix+1][iz+2]-a[ix-1][iz+2]-a[ix+1][iz-2]+a[ix-1][iz-2]+a[ix+2][iz+1]-a[ix-2][iz+1]-a[ix+2][iz-1]+a[ix-2][iz-1]) + \
+                            B613*(a[ix+1][iz+3]-a[ix-1][iz+3]-a[ix+1][iz-3]+a[ix-1][iz-3]+a[ix+3][iz+1]-a[ix-3][iz+1]-a[ix+3][iz-1]+a[ix-3][iz-1]) + \
+                            B622*(a[ix+2][iz+2]-a[ix-2][iz+2]-a[ix+2][iz-2]+a[ix-2][iz-2]) + \
+                            B623*(a[ix+2][iz+3]-a[ix-2][iz+3]-a[ix+2][iz-3]+a[ix-2][iz-3]+a[ix+3][iz+2]-a[ix-3][iz+2]-a[ix+3][iz-2]+a[ix-3][iz-2]) + \
+                            B633*(a[ix+3][iz+3]-a[ix-3][iz+3]-a[ix+3][iz-3]+a[ix-3][iz-3]))
 
 //! Survey
 int sjssurvey_init(sjssurvey *ptr);
@@ -67,5 +104,11 @@ void sjawsgfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave
 
 //! Two dimension acoustic reverse time simulation based on constant velocity-stress equation
 void sjawrtsgfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
+
+//! Two dimension acoustic simulation based on constant density equation
+void sjawfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
+
+//! Two dimension acoustic reverse time simulation based on constant density equation
+void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
 
 #endif //SJI_SIMULATION_H

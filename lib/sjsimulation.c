@@ -3,6 +3,7 @@
 //
 
 #include "sjsimulation.h"
+#include "sjinc.h"
 
 //! Survey
 int sjssurvey_init(sjssurvey *ptr) {
@@ -114,7 +115,7 @@ int sjssurvey_getparas(sjssurvey *ptr, int argc, char **argv) {
         return 0;
     } else {
         if (!sjmgets("survey", ptr->surveyfile)) {
-            printf("ERROR: Should input survey file!\n");
+            printf("ERROR: Should set survey file!\n");
             return 0;
         };
 
@@ -193,12 +194,13 @@ int sjsgeo_init(sjsgeo *ptr) {
     ptr->vp2d = NULL;
     ptr->vp2d = NULL;
 
-    ptr->gppimage2d = NULL;
-    ptr->ppimage2d = NULL;
-    ptr->ppecimage2d = NULL;
+    ptr->gipp2d = NULL;
+    ptr->ipp2d = NULL;
+    ptr->nipp2d = NULL;
 
     ptr->vpfile = NULL;
     ptr->vsfile = NULL;
+    ptr->ippfile = NULL;
 
     return 1;
 }
@@ -212,6 +214,7 @@ int sjsgeo_display(sjsgeo *ptr) {
     printf("vp2d=%d\n", ptr->vp2d);
     printf("vpfile=%s\n", ptr->vpfile);
     printf("vsfile=%s\n", ptr->vsfile);
+    printf("ippfile=%s\n", ptr->ippfile);
     return 1;
 }
 
@@ -224,11 +227,25 @@ int sjsgeo_getparas2d(sjsgeo *ptr, int argc, char **argv, char *info) {
             return 0;
         } else {
             if (!sjmgets("vp", ptr->vpfile)) {
-                printf("ERROR: Should input 2D vp file!\n");
+                printf("ERROR: Should set 2D vp file!\n");
                 exit(0);
             }
             if (!sjmgetf("ds", ptr->ds)) ptr->ds = 10.0;
             if (!sjmgeti("nb", ptr->nb)) ptr->nb = 15;
+
+            return 1;
+        }
+    }
+
+    if (strcmp(info, "ipp") == 0) {
+        if (argc == 1) {
+            printf("* ipp:        Image file of P-P wave.\n");
+            return 0;
+        } else {
+            if (!sjmgets("ipp", ptr->ippfile)) {
+                printf("ERROR: Should set ipp file!\n");
+                exit(0);
+            }
 
             return 1;
         }
@@ -288,11 +305,11 @@ int sjswave_getparas(sjswave *ptr, int argc, char **argv, char *info) {
             return 0;
         } else {
             if (!sjmgets("recy", ptr->recyfile)) {
-                printf("ERROR: Should input recy!\n");
+                printf("ERROR: Should set recy!\n");
                 exit(0);
             }
             if (!sjmgeti("nt", ptr->nt)) {
-                printf("ERROR: Should input nt!\n");
+                printf("ERROR: Should set nt!\n");
                 exit(0);
             }
             if (!sjmgeti("ycutdirect", ptr->ycutdirect)) ptr->ycutdirect = 1;
@@ -312,11 +329,11 @@ int sjswave_getparas(sjswave *ptr, int argc, char **argv, char *info) {
             return 0;
         } else {
             if (!sjmgets("recx", ptr->recxfile)) {
-                printf("ERROR: Should input recx!\n");
+                printf("ERROR: Should set recx!\n");
                 exit(0);
             }
             if (!sjmgeti("nt", ptr->nt)) {
-                printf("ERROR: Should input nt!\n");
+                printf("ERROR: Should set nt!\n");
                 exit(0);
             }
             if (!sjmgeti("ycutdirect", ptr->ycutdirect)) ptr->ycutdirect = 1;
@@ -336,11 +353,11 @@ int sjswave_getparas(sjswave *ptr, int argc, char **argv, char *info) {
             return 0;
         } else {
             if (!sjmgets("recz", ptr->reczfile)) {
-                printf("ERROR: Should input recz!\n");
+                printf("ERROR: Should set recz!\n");
                 exit(0);
             }
             if (!sjmgeti("nt", ptr->nt)) {
-                printf("ERROR: Should input nt!\n");
+                printf("ERROR: Should set nt!\n");
                 exit(0);
             }
             if (!sjmgeti("ycutdirect", ptr->ycutdirect)) ptr->ycutdirect = 1;
@@ -642,7 +659,7 @@ void sjawrtsgfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wa
         if ((it % jsnap) == 0)
             for (ix = nb + marg; ix < nxb - nb - marg; ix++)
                 for (iz = nb + marg; iz < nzb - nb - marg; iz++)
-                    geo->ppimage2d[ix - nb - marg][iz - nb - marg] +=
+                    geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
                             wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p0[ix][iz];
 
 
@@ -665,4 +682,281 @@ void sjawrtsgfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wa
     sjmfree2d(vz1);
     sjmfree2d(p0);
     sjmfree2d(p1);
+}
+
+//! Two dimension acoustic simulation based on constant density equation
+void sjawfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
+
+    //! Runtime
+    int it, ir, ix, iz;
+
+    //! Finite difference
+    const int marg = 6;
+
+    //! Source
+    int srctrunc = source->srctrunc;
+    int srcrange = source->srcrange;
+    float dt = source->dt;
+    float srcdecay = source->srcdecay;
+    float *wav = source->wavelet;
+
+    //! Survey
+    int nx = survey->nx;
+    int nz = survey->nz;
+    int sx = survey->sx + geo->nb + marg;
+    int sz = survey->sz + geo->nb + marg;
+    int nr = survey->nr;
+    int *rx = survey->rx;
+    int *rz = survey->rz;
+
+    //! Model
+    int nb = geo->nb;
+    int nxb = nx + 2 * marg + 2 * nb;
+    int nzb = nz + 2 * marg + 2 * nb;
+    float ds = geo->ds;
+    float ids = dt * dt / ds / ds;
+    float **cp = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+    sjextend2d(geo->vp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, cp);
+
+    //! Wave
+    int nt = wave->nt;
+    int jsnap = wave->jsnap;
+    int ycutdirect = wave->ycutdirect;
+
+    //! Boundary condition
+    float **gxl = (float **) sjalloc2d(nzb, 8, sizeof(float));
+    float **gxr = (float **) sjalloc2d(nzb, 8, sizeof(float));
+    float **gzu = (float **) sjalloc2d(nxb, 8, sizeof(float));
+    float **gzb = (float **) sjalloc2d(nxb, 8, sizeof(float));
+
+    //! Wavefield
+    float **p2 = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+    float **p1 = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+    float **p0 = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+
+    //------------------------ Initialization ------------------------//
+    //! Boundary condition
+    sjinitthabc2d(cp, cp, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+    //! Model
+    for (ix = 0; ix < nxb; ix++)
+        for (iz = 0; iz < nzb; iz++)
+            cp[ix][iz] = cp[ix][iz] * cp[ix][iz] * ids;
+    //! Wavefield
+    memset(p2[0], 0, nxb * nzb * sizeof(float));
+    memset(p1[0], 0, nxb * nzb * sizeof(float));
+    memset(p0[0], 0, nxb * nzb * sizeof(float));
+
+    /**********************************************************************************************/
+    /* ! Wavefield                                                                                */
+    /**********************************************************************************************/
+
+    //! Wavefield exploration
+    for (it = 0; it < nt; it++) {
+
+        //! Source
+        if (it < srctrunc)
+            for (ix = -srcrange; ix <= srcrange; ix++)
+                for (iz = -srcrange; iz <= srcrange; iz++)
+                    p1[ix + sx][iz + sz] += wav[it] * expf(-srcdecay * (ix * ix + iz * iz));
+
+        //! Calculate veloctiy
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++)
+                p2[ix][iz] =
+                        cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) + 2.0f * p1[ix][iz] - p0[ix][iz];
+
+
+        //! Boundary condition
+        sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+        //! Record
+        for (ir = 0; ir < nr; ir++)
+            wave->recz[ir][it] = p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+
+        //! Wavefield
+        if ((it % jsnap) == 0)
+            for (ix = nb + marg; ix < nxb - nb - marg; ix++)
+                for (iz = nb + marg; iz < nzb - nb - marg; iz++)
+                    wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
+
+        //! Update
+        memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
+        memcpy(p1[0], p2[0], nxb * nzb * sizeof(float));
+    }
+
+    /**********************************************************************************************/
+    /* ! Cut direct wave                                                                          */
+    /**********************************************************************************************/
+    if (ycutdirect == 1) {
+        //------------------------ Model ------------------------//
+        for (ix = 0; ix < nxb; ix++)
+            for (iz = 0; iz < nzb; iz++)
+                cp[ix][iz] = geo->vp2d[sx - marg - nb][sz - marg - nb];
+
+        //------------------------ Initialization ------------------------//
+
+        //! Boundary condition
+        sjinitthabc2d(cp, cp, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+
+        //! Model
+        for (ix = 0; ix < nxb; ix++)
+            for (iz = 0; iz < nzb; iz++)
+                cp[ix][iz] = cp[ix][iz] * cp[ix][iz] * ids;
+
+        //! Wavefield
+        memset(p2[0], 0, nxb * nzb * sizeof(float));
+        memset(p1[0], 0, nxb * nzb * sizeof(float));
+        memset(p0[0], 0, nxb * nzb * sizeof(float));
+
+        //! Wavefield exploration
+        for (it = 0; it < nt; it++) {
+
+            //! Source
+            if (it < srctrunc)
+                for (ix = -srcrange; ix <= srcrange; ix++)
+                    for (iz = -srcrange; iz <= srcrange; iz++)
+                        p1[ix + sx][iz + sz] += wav[it] * expf(-srcdecay * (ix * ix + iz * iz));
+
+            //! Calculate veloctiy
+            for (ix = marg; ix < nxb - marg; ix++)
+                for (iz = marg; iz < nzb - marg; iz++)
+                    p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) + 2.0f * p1[ix][iz] -
+                                 p0[ix][iz];
+
+            //! Boundary condition
+            sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+            //! Record
+            for (ir = 0; ir < nr; ir++)
+                wave->recz[ir][it] -= p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+
+            //! Update
+            memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
+            memcpy(p1[0], p2[0], nxb * nzb * sizeof(float));
+        }
+    }
+
+    sjmfree2d(cp);
+
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
+
+    sjmfree2d(p2);
+    sjmfree2d(p1);
+    sjmfree2d(p0);
+}
+
+//! Two dimension acoustic reverse time simulation based on constant density equation
+void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
+
+    //! Runtime
+    int it, ir, ix, iz;
+
+    //! Finite difference
+    const int marg = 6;
+
+    //! Source
+    float dt = source->dt;
+
+    //! Survey
+    int nx = survey->nx;
+    int nz = survey->nz;
+    int nr = survey->nr;
+    int *rx = survey->rx;
+    int *rz = survey->rz;
+
+    //! Model
+    int nb = geo->nb;
+    int nxb = nx + 2 * marg + 2 * nb;
+    int nzb = nz + 2 * marg + 2 * nb;
+    float ds = geo->ds;
+    float ids = dt * dt / ds / ds;
+    float **cp = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+    sjextend2d(geo->vp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, cp);
+
+    //! Wave
+    int nt = wave->nt;
+    int jsnap = wave->jsnap;
+
+    //! Boundary condition
+    float **gxl = (float **) sjalloc2d(nzb, 8, sizeof(float));
+    float **gxr = (float **) sjalloc2d(nzb, 8, sizeof(float));
+    float **gzu = (float **) sjalloc2d(nxb, 8, sizeof(float));
+    float **gzb = (float **) sjalloc2d(nxb, 8, sizeof(float));
+
+    //! Wavefield
+    float **p2 = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+    float **p1 = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+    float **p0 = (float **) sjalloc2d(nxb, nzb, sizeof(float));
+
+    //------------------------ Initialization ------------------------//
+    //! Boundary condition
+    sjinitthabc2d(cp, cp, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+    //! Model
+    for (ix = 0; ix < nxb; ix++)
+        for (iz = 0; iz < nzb; iz++)
+            cp[ix][iz] = cp[ix][iz] * cp[ix][iz] * ids;
+    //! Wavefield
+    memset(p2[0], 0, nxb * nzb * sizeof(float));
+    memset(p1[0], 0, nxb * nzb * sizeof(float));
+    memset(p0[0], 0, nxb * nzb * sizeof(float));
+
+    /**********************************************************************************************/
+    /* ! Wavefield                                                                                */
+    /**********************************************************************************************/
+
+    //! Wavefield revese time exploration
+    for (it = nt - 1; it >= 0; --it) {
+
+        if (wave->yadjointbc == 1) {
+            for (ir = 0; ir < nr; ir++)
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wave->recz[ir][it];
+        } else {
+            for (ir = 0; ir < nr; ir++)
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] += wave->recz[ir][it];
+        }
+
+        //! Calculate velocity
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++)
+                p0[ix][iz] =
+                        cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) + 2.0f * p1[ix][iz] - p2[ix][iz];
+
+        //! Boundary condition
+        sjapplythabc2d(p0, p1, p2, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+        //! Wavefield
+        if ((it % jsnap) == 0) {
+            if (wave->yadjointbc == 1) {
+                for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
+                    for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
+                        geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
+                                wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
+                        geo->nipp2d[ix - nb - marg][iz - nb - marg] +=
+                                wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
+                                wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
+                    }
+                }
+            } else {
+
+            }
+        }
+
+        //! Update
+        memcpy(p2[0], p1[0], nxb * nzb * sizeof(float));
+        memcpy(p1[0], p0[0], nxb * nzb * sizeof(float));
+    }
+
+    sjmfree2d(cp);
+
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
+
+    sjmfree2d(p0);
+    sjmfree2d(p1);
+    sjmfree2d(p2);
 }

@@ -18,10 +18,6 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rankid);
     MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 
-    if (rankid == 0) {
-        printf("\nSimulate 2D acoustic wavefield using constant density velocity-stress equation.\n\n");
-    }
-
     //! Source
     sjssource source;
     flag &= sjssource_init(&source);
@@ -46,7 +42,7 @@ int main(int argc, char *argv[]) {
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf("Constant density acoustic simulation start.\n");
+            printf(" ---------------- 2D Acoustic simulation start  ---------------- \n");
         }
 
         //! Source
@@ -55,7 +51,8 @@ int main(int argc, char *argv[]) {
 
         //! Model
         geo2d.gvp2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
-        sjreadsuall(geo2d.gvp2d[0],survey.gnx, survey.gnz, geo2d.vpfile);
+
+        sjreadsuall(geo2d.gvp2d[0], survey.gnx, survey.gnz, geo2d.vpfile);
 
         //! Simulation
         for (is = rankid; is < survey.ns; is += nrank) {
@@ -74,7 +71,7 @@ int main(int argc, char *argv[]) {
             wave2d.snapz2d = (float ***) sjalloc3d(wave2d.nsnap, survey.nx, survey.nz, sizeof(float));
 
             //! Simulation
-            sjawsgfd2d(&source, &survey, &geo2d, &wave2d);
+            sjawfd2d(&source, &survey, &geo2d, &wave2d);
 
             //! Output
             if (rankid == 0) {
@@ -91,7 +88,8 @@ int main(int argc, char *argv[]) {
                     if ((is + mpiid) < survey.ns) {
                         MPI_Recv(wave2d.recz[0], survey.nr * wave2d.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
-                        sjwritesu(wave2d.recz[0], survey.nr, wave2d.nt, sizeof(float), source.dt, is+mpiid, wave2d.reczfile);
+                        sjwritesu(wave2d.recz[0], survey.nr, wave2d.nt, sizeof(float), source.dt, is + mpiid,
+                                  wave2d.reczfile);
                     }
                 }
             } else {
@@ -106,19 +104,19 @@ int main(int argc, char *argv[]) {
             }
 
             //! Free
-            sjcheckfree2d((void **)geo2d.vp2d);
-            sjcheckfree2d((void **)wave2d.recz);
-            sjcheckfree3d((void ***)wave2d.snapz2d);
+            sjcheckfree2d((void **) geo2d.vp2d);
+            sjcheckfree2d((void **) wave2d.recz);
+            sjcheckfree3d((void ***) wave2d.snapz2d);
         }
 
         //------------------------ Information ------------------------//
         if (rankid == 0) {
             Tend = (double) clock();
-            printf("Constant density acoustic simulation complete - time=%fs.\n", (Tend - Tstart) / CLOCKS_PER_SEC);
+            printf("2D acoustic simulation complete - time=%fs.\n", (Tend - Tstart) / CLOCKS_PER_SEC);
         }
 
     } else {
-        printf("\nExamples:   sjmpiawsgfd2d survey=survey.su vp=vp.su recz=recz.su nt=3001\n");
+        printf("\nExamples:   sjmpiawfd2d survey=survey.su vp=vp.su recz=recz.su nt=3001\n");
         sjbasicinformation();
     }
 

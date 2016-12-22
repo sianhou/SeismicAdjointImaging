@@ -17,16 +17,14 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
     //! Time
     if (rankid == 0) {
         Tstart = (double) clock();
-        printf("Acoustic RTM start.\n");
+        printf("---------------- 2D Acoustic RTM start  ----------------\n");
     }
 
-
-
-
-
     float **mig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));
-    MPI_Bcast(geo->gvp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    float **nmig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));
+    float **gnmig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));
 
+    MPI_Bcast(geo->gvp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     //! Rtm
     for (is = rankid; is < survey->ns; is += nrank) {
@@ -38,7 +36,8 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
 
         //! Model
         geo->vp2d = (float **) sjalloc2d(survey->nx, survey->nz, sizeof(float));
-        geo->ppimage2d = (float **) sjalloc2d(survey->nx, survey->nz, sizeof(float));
+        geo->ipp2d = (float **) sjalloc2d(survey->nx, survey->nz, sizeof(float));
+        geo->nipp2d = (float **) sjalloc2d(survey->nx, survey->nz, sizeof(float));
         sjextract2d(geo->gvp2d, survey->x0, survey->z0, survey->nx, survey->nz, geo->vp2d);
 
         //! Wavefield
@@ -52,14 +51,21 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
         sjreadsu(wave->recz[0], survey->nr, wave->nt, sizeof(float), survey->tr, 0, wave->reczfile);
 
         //! Adjoint image
-        sjawrtsgfd2d(source, survey, geo, wave);
+        wave->yadjointbc = 1;
+        wave->ycutdirect = 0;
+        sjawrtfd2d(source, survey, geo, wave);
+
+        //! Laplace filter
+        sjlaplcefilter2d(geo->ipp2d, survey->nx, survey->nz);
 
         //! Stacking
-        sjprojaddeq2d(mig, geo->ppimage2d, survey->x0, survey->z0, survey->nx, survey->nz);
+        sjprojaddeq2d(mig, geo->ipp2d, survey->x0, survey->z0, survey->nx, survey->nz);
+        sjprojaddeq2d(nmig, geo->nipp2d, survey->x0, survey->z0, survey->nx, survey->nz);
 
         //! Free
         sjmcheckfree2d(geo->vp2d);
-        sjmcheckfree2d(geo->ppimage2d);
+        sjmcheckfree2d(geo->ipp2d);
+        sjmcheckfree2d(geo->nipp2d);
         sjmcheckfree2d(wave->recz);
         sjmcheckfree3d(wave->snapz2d);
 
@@ -74,9 +80,12 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
     }
 
     //! Communication
-    MPI_Reduce(mig[0], geo->gppimage2d[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-
+    MPI_Reduce(mig[0], geo->gipp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    MPI_Reduce(nmig[0], gnmig[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     MPI_Barrier(MPI_COMM_WORLD);
+
+    //! Source compenate
+    sjprojdiveq2d(geo->gipp2d, gnmig, 0, 0, survey->gnx, survey->gnz);
 
     //------------------------ Information ------------------------//
     if (rankid == 0) {
@@ -86,6 +95,8 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
 
     //! Free
     sjmcheckfree2d(mig);
+    sjmcheckfree2d(nmig);
+    sjmcheckfree2d(gnmig);
 
     return 1;
 }
@@ -101,10 +112,6 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rankid);
     MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 
-    if (rankid == 0) {
-        printf("\n2D acoustic RTM using constant density velocity-stress equation.\n\n");
-    }
-
     //! Source
     sjssource source;
     flag &= sjssource_init(&source);
@@ -119,6 +126,7 @@ int main(int argc, char *argv[]) {
     sjsgeo geo2d;
     flag &= sjsgeo_init(&geo2d);
     flag &= sjsgeo_getparas2d(&geo2d, argc, argv, "vp");
+    flag &= sjsgeo_getparas2d(&geo2d, argc, argv, "ipp");
 
     //! Wave
     sjswave wave2d;
@@ -126,11 +134,6 @@ int main(int argc, char *argv[]) {
     flag &= sjswave_getparas(&wave2d, argc, argv, "recz");
 
     if (flag) {
-        char *mig = NULL;
-        if (!sjmgets("mig", mig)) {
-            printf("ERROR: Should output rtm file!\n");
-            exit(0);
-        }
 
         //! Source
         source.wavelet = (float *) sjalloc1d(source.srctrunc, sizeof(float));
@@ -141,16 +144,14 @@ int main(int argc, char *argv[]) {
         sjreadsuall(geo2d.gvp2d[0], survey.gnx, survey.gnz, geo2d.vpfile);
 
         //! Migration
-        geo2d.gppimage2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
-
+        geo2d.gipp2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
         sjartm2d(&source, &survey, &geo2d, &wave2d);
-/*
-            if (rankid == 0) {
-                sjwritesuall(geo2d.gppimage2d[0], survey.gnx, survey.gnz, geo2d.ds, mig);
-            }
-            */
+
+        //! Output
+        sjwritesuall(geo2d.gipp2d[0], survey.gnx, survey.gnz, geo2d.ds, geo2d.ippfile);
+
     } else {
-        printf("\nExamples:   sjmpiartm2d survey=survey.su vp=vp.su recz=recz.su mig=mig.su\n");
+        printf("\nExamples:   sjmpiartm2d survey=survey.su vp=vp.su recz=recz.su ipp=mig.su\n");
         sjbasicinformation();
     }
 

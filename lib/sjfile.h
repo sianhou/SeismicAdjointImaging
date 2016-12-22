@@ -522,35 +522,6 @@ typedef struct {        /* bhed - binary header */
     short hunass[170];  /* unassigned */
 
 } bhed;
-typedef struct {
-    int sy;     //! source position in y(n3)-direction
-    int sx;     //! source position in x(n2)-direction
-    int sz;     //! source position in z(n1)-direction
-
-    int gyl;    //! global model length in y(n3)-direction
-    int gxl;    //! global model length in x(n2)-direction
-    int gzl;    //! global model length in z(n1)-direction
-
-    int ly0;    //! local model start in y(n3)-direction
-    int lx0;    //! local model start in x(n2)-direction
-    int lz0;    //! local model start in z(n1)-direction
-
-    int lyl;    //! local model length in y(n3)-direction
-    int lxl;    //! local model length in x(n2)-direction
-    int lzl;    //! local model length in z(n1)-direction
-
-    int nr;
-
-    int tr;
-} sury;
-typedef struct {
-    char information[3600];
-    int n7, n6, n4, n5, n3, n2, n1;
-    int o7, o6, o5, o4, o3, o2, o1;
-    float d7, d6, d5, d4, d3, d2, d1;
-    int size;
-    char filename[2048];
-} sgheader;
 
 //! Show information
 void sjbasicinformation();

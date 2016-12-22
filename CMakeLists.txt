@@ -22,7 +22,7 @@ add_definitions("-O3")
 
 #! Library
 set(SJINC lib/sjinc.h)
-set(SJLIB lib/sjabc.c lib/sjfd.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c)
+set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjsimulation.c)
 add_library(sj ${SJLIB} ${SGLIB})
 
 #! RUNTIME
@@ -64,7 +64,7 @@ find_package ( MPI )
 if ( MPI_FOUND )
     #! Library
     set(SJINC lib/sjinc.h)
-    set(SJLIB lib/sjabc.c lib/sjfd.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c)
+    set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjsimulation.c)
     add_library(mpisj ${SJINC} ${SJLIB})
 
     #! RUNTIME

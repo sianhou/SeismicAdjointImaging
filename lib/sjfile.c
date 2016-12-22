@@ -7,9 +7,10 @@
 //! Show information
 void sjbasicinformation() {
     printf("\n");
-    printf("Author:  Hou, Sian\n");
-    printf("E-mail:  sianhou1987@outlook.com\n");
-    printf("Website: https://github.com/housian1987/gfdxyz\n");
+    printf("Author:     Hou, Sian\n");
+    printf("E-mail:     sianhou1987@outlook.com\n");
+    printf("Website:    https://github.com/housian1987/SeismicAdjointModeling\n");
+    exit(0);
 }
 
 //! Process standard input
@@ -342,36 +343,4 @@ int sjreadsuall(float *ptr, int n2, int n1, char *inputname) {
     }
     fclose(fpsegy);
     return 1;
-}
-
-//! Survey
-int sjgetsvynum() {
-    return sizeof(sury) / sizeof(int);
-}
-
-int sjgetsvyns(char *inputname) {
-    return sjgetsun2(sizeof(int), inputname);
-}
-
-int sjgetsvynr(char *inputname) {
-    return (sjgetsun1(sizeof(int), inputname) - sjgetsvynum()) / 3;
-}
-
-int sjreadsurvey(int is, sury *svy, int *ry, int *rx, int *rz, char *inputname) {
-    //! Get the ns
-    int nsvy = sjgetsvynum();
-    int ns = sjgetsvyns(inputname);
-    int nr = sjgetsvynr(inputname);
-    if (is < ns) {
-        //! Get suy
-        sjreadsu(svy, 1, nsvy, sizeof(int), is, 0, inputname);
-        //! get ry rx rz
-        sjreadsu(ry, 1, nr, sizeof(int), is, nsvy + 0 * nr, inputname);
-        sjreadsu(rx, 1, nr, sizeof(int), is, nsvy + 1 * nr, inputname);
-        sjreadsu(rz, 1, nr, sizeof(int), is, nsvy + 2 * nr, inputname);
-        return 1;
-    } else {
-        printf("ERROR: Is exceed ns in function sgbin2su()!");
-        return 0;
-    }
 }

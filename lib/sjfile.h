@@ -590,13 +590,4 @@ int sjwritesuall(float *ptr, int n2, int n1, float dt, char *outputname);
 
 int sjreadsuall(float *ptr, int n2, int n1, char *inputname);
 
-//! Survey
-int sjgetsvynum();
-
-int sjgetsvyns(char *inputname);
-
-int sjgetsvynr(char *inputname);
-
-int sjreadsurvey(int is, sury *svy, int *ry, int *rx, int *rz, char *inputname);
-
 #endif //SJI_SJFILE_H

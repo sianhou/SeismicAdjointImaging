@@ -29,7 +29,7 @@
                             B66*(a[ix+6][iz]+a[ix-6][iz]) )
 
 
-void sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
+int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
 
     int it = 0;
 
@@ -41,6 +41,8 @@ void sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
         tmpr = (1.0 - 2.0 * tmpf * (it - t0) * (it - t0) * tmpt) * exp(-tmpf * (it - t0) * (it - t0) * tmpt);
         ricker[it] = ((float) tmpr) * amp;
     }
+
+    return 1;
 }
 
 void sjextend2d(float **input, int nx, int nz,

@@ -7,7 +7,7 @@
 
 #include "sjinc.h"
 
-void sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp);
+int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp);
 
 void sjextend2d(float **input, int nx, int nz, int ex0, int ex1, int ez0, int ez1, float **output);
 

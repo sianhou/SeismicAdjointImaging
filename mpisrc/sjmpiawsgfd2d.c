@@ -7,242 +7,121 @@
 
 int main(int argc, char *argv[]) {
 
-    //------------------------ Initlization ------------------------//
+    //! Runtime
+    int flag = 1, is = 0;
+    double tstart, tend, Tstart, Tend;
+
     //! MPI
     int mpiid, rankid, nrank;
     MPI_Status stauts;
-
     MPI_Init(&argc, &argv);
     MPI_Comm_rank(MPI_COMM_WORLD, &rankid);
     MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 
-    if (argc == 1) {
+    if (rankid == 0) {
         printf("\nSimulate 2D acoustic wavefield using constant density velocity-stress equation.\n\n");
-        printf("Parameters:\n");
-        printf("svy:          Input filename of seismic survey.\n");
-        printf("vp:           Input filename of seismic P-model.\n");
-        printf("rec:          Output filename of seismic profile.\n");
-        printf("nt:           Total time of acoustic simulation.\n");
-        printf("dt:           Interval of time(s), default = 0.001.\n");
-        printf("ds:           Interval of space(m), default = 10.0.\n");
-        printf("Other parameters:\n");
-        printf("k1:           Peak position of wavelet, default = 30.\n");
-        printf("srcrange:     Total range of source, default = 10.\n");
-        printf("srctrunc:     Total time of source, default = 301.\n");
-        printf("fp:           Peak frequency of wavelet, default = 20.\n");
-        printf("amp:          Peak amplitude of wavelet, default = 1.0.\n");
-        printf("srcdecay:     Decay of source, default = 0.4.\n");
-        printf("nb:           Range of ABC, default = 15.\n");
-        printf("ycutdirect:   Cut direct wave, 0: didn't cut ;\n");
-        printf("                               1: cut direct (default).\n");
-        printf("ompnum:       Number of OpenMP threads, default = 4.\n");
-        printf("\nExamples:   sjmpiawsgfd2d svy=survey.su vp=vp.su rec=profile.su nt=3001\n");
-        sjbasicinformation();
-    } else {
-        //------------------------ Initlization ------------------------//
-        //! Define parameters
-        int is = 0, ompnum;
-        double tstart, tend, Tstart, Tend, runtime, Runtime;
-        //! Read parameters
-        if (!sjmgeti("ompnum", ompnum)) ompnum = 4;
-        //! Set parameters
-#ifdef GFDOPENMP_
-        omp_set_num_threads(ompnum);
-#endif
+    }
 
-        //------------------------ Source ------------------------//
-        //! Define parameters
-        int nt, k1, srcrange, srctrunc;
-        float dt, fp, amp, srcdecay;
-        float *wavelet = NULL;
-        //! Read parameters
-        if (!sjmgeti("nt", nt)) {
-            printf("ERROR: Should input nt in program sgawsgfd2d!\n");
-            exit(0);
-        }
-        if (!sjmgeti("k1", k1)) k1 = 30;
-        if (!sjmgeti("srcrange", srcrange)) srcrange = 10;
-        if (!sjmgeti("srctrunc", srctrunc)) srctrunc = 301;
-        if (!sjmgetf("dt", dt)) dt = 0.001;
-        if (!sjmgetf("fp", fp)) fp = 20.0;
-        if (!sjmgetf("amp", amp)) amp = 10.0;
-        if (!sjmgetf("srcdecay", srcdecay)) srcdecay = 0.4;
-        //! Allocate memory
-        wavelet = (float *) sjalloc1d(nt, sizeof(float));
-        //! Calculate parameters
-        sjricker1d(wavelet, nt, k1, dt, fp, amp);
+    //! Source
+    sjssource source;
+    flag &= sjssource_init(&source);
+    flag &= sjssource_getparas(&source, argc, argv);
 
-        //------------------------ Boundary condition ------------------------//
-        //! Define parameters
-        int nb;
-        if (!sjmgeti("nb", nb)) nb = 15;
+    //! Survey
+    sjssurvey survey;
+    flag &= sjssurvey_init(&survey);
+    flag &= sjssurvey_getparas(&survey, argc, argv);
 
-        //------------------------ Survey ------------------------//
-        //! Define parameters
-        sury svy;
-        char *svyfile;
-        int ns, nr;
-        int *ry = NULL, *rx = NULL, *rz = NULL;
-        //! Read parameters
-        if (!sjmgets("svy", svyfile)) {
-            printf("ERROR: Should input survey in program sjmpiawsgfd2d!\n");
-            exit(0);
-        }
-        ns = sjgetsvyns(svyfile);
-        nr = sjgetsvynr(svyfile);
-        //! Allocate memory
-        ry = (int *) sjalloc1d(nr, sizeof(int));
-        rx = (int *) sjalloc1d(nr, sizeof(int));
-        rz = (int *) sjalloc1d(nr, sizeof(int));
+    //! Model
+    sjsgeo geo2d;
+    flag &= sjsgeo_init(&geo2d);
+    flag &= sjsgeo_getparas2d(&geo2d, argc, argv, "vp");
 
-        //------------------------ Model ------------------------//
-        //! Define parameters
-        char *vpfile;
-        float ds;
-        float **gvp = NULL;
-        //! Initialize parameters
-        if (!sjmgetf("ds", ds)) ds = 10.0;
-        if (!sjmgets("vp", vpfile)) {
-            printf("ERROR: Should input vp in program sjmpiawsgfd2d!\n");
-            exit(0);
-        }
-        //! Read parameters
-        sjreadsurvey(0, &svy, ry, rx, rz, svyfile); //! Read the first shot's survey to get global model parameters
-        //! Allocate memory
-        gvp = (float **) sjalloc2d(svy.gxl, svy.gzl, sizeof(float));
-        //! Read model
-        sjreadsuall(gvp[0], svy.gxl, svy.gzl, vpfile);
+    //! Wave
+    sjswave wave2d;
+    flag &= sjswave_init(&wave2d);
+    flag &= sjswave_getparas(&wave2d, argc, argv, "recz");
 
-        //------------------------ Wavefield ------------------------//
-        //! Define parameters
-        int ycutdirect;
-        char *recfile;
-        //! Read parameters
-        if (!sjmgeti("ycutdirect", ycutdirect)) ycutdirect = 1;
-        //! Initialize parameters
-        if (!sjmgets("rec", recfile)) {
-            printf("ERROR: Should output rec in program sjmpiawsgfd2d!\n");
-            exit(0);
-        }
-
-        //------------------------ Start ------------------------//
+    if (flag) {
+        //! Time
         if (rankid == 0) {
-            printf("\nConstant density acoustic simulation start.\n\n");
-#ifdef GFDOPENMP_
-            Tstart = omp_get_wtime();
-#else
             Tstart = (double) clock();
-#endif
+            printf("Constant density acoustic simulation start.\n");
         }
 
-        for (is = rankid; is < ns; is += nrank) {
-            //------------------------ Information ------------------------//
+        //! Source
+        sjricker1d(source.wavelet, source.srctrunc, source.k1, source.dt, source.fp, source.amp);
+
+        //! Model
+        geo2d.gvp2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
+        sjreadsuall(geo2d.gvp2d[0],survey.gnx, survey.gnz, geo2d.vpfile);
+
+        //! Simulation
+        for (is = rankid; is < survey.ns; is += nrank) {
             //! Time
-#ifdef GFDOPENMP_
-            tstart = omp_get_wtime();
-#else
             tstart = (double) clock();
-#endif
 
-            //------------------------ Survey ------------------------//
-            //! Read parameters
-            sjreadsurvey(is, &svy, ry, rx, rz, svyfile);
+            //! Survey
+            sjssurvey_readis(&survey, is);
 
-            //------------------------ Model ------------------------//
-            //! Define parameters
-            float **lvp = NULL;
-            //! Allocate memory
-            lvp = (float **) sjalloc2d(svy.lxl, svy.lzl, sizeof(float));
-            //! Extract model
-            sjextract2d(gvp, svy.lx0, svy.lz0, svy.lxl, svy.lzl, lvp);
+            //! Model
+            geo2d.vp2d = (float **) sjalloc2d(survey.nx, survey.nz, sizeof(float));
+            sjextract2d(geo2d.gvp2d, survey.x0, survey.z0, survey.nx, survey.nz, geo2d.vp2d);
 
-            //------------------------ Wavefield ------------------------//
-            //! Define parameters
-            float **profile = NULL, ***snap = NULL;
-            //! Allocate memory
-            profile = (float **) sjalloc2d(svy.nr, nt, sizeof(float));
+            //! Wavefield
+            wave2d.recz = (float **) sjalloc2d(survey.nr, wave2d.nt, sizeof(float));
+            wave2d.snapz2d = (float ***) sjalloc3d(wave2d.nsnap, survey.nx, survey.nz, sizeof(float));
 
-            //------------------------ Simulation ------------------------//
-            sjawsgfd2d(nt, svy.sx, svy.sz, srcrange, srctrunc, //! Source
-                       dt, srcdecay, wavelet,
-                       svy.lxl, svy.lzl, ds, lvp, //! Model
-                       nb, svy.nr, rx, rz, //! BC & survey
-                       0, 1, profile, snap, //! Wavefield
-                       ycutdirect);
+            //! Simulation
+            sjawsgfd2d(&source, &survey, &geo2d, &wave2d);
 
-            //------------------------ Commuication & Output ------------------------//
+            //! Output
             if (rankid == 0) {
-                //! Output in rankid==0
-                sjwritesu(profile[0], svy.nr, nt, sizeof(float), dt, is, recfile);
-#ifdef GFDOPENMP_
-                tend = omp_get_wtime();
-                runtime = tend - tstart;
-#else
+                sjwritesu(wave2d.recz[0], survey.nr, wave2d.nt, sizeof(float), source.dt, is, wave2d.reczfile);
                 tend = (double) clock();
-                runtime = (tend - tstart) / CLOCKS_PER_SEC;
-#endif
-                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, ns, runtime);
+                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, survey.ns,
+                       (tend - tstart) / CLOCKS_PER_SEC);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
-                       svy.sx + svy.lx0, svy.sz + svy.lz0, rx[0] + svy.lx0, rx[svy.nr - 1] + svy.lx0, rz[0] + svy.lz0,
-                       rz[svy.nr - 1] + svy.lz0);
+                       survey.sx + survey.x0, survey.sz + survey.z0,
+                       survey.rx[0] + survey.x0, survey.rx[survey.nr - 1] + survey.x0,
+                       survey.rz[0] + survey.z0, survey.rz[survey.nr - 1] + survey.z0);
+
                 for (mpiid = 1; mpiid < nrank; mpiid++) {
-                    if ((is + mpiid) < ns) {
-                        //! Get model parameters
-                        MPI_Recv(&svy, sjgetsvynum(), MPI_INT, mpiid, 98, MPI_COMM_WORLD, &stauts);
-                        //! Free & Allocate memory
-                        sjmcheckfree2d(profile);
-                        profile = (float **) sjalloc2d(svy.nr, nt, sizeof(float));
-                        MPI_Recv(profile[0], svy.nr * nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
+                    if ((is + mpiid) < survey.ns) {
+                        MPI_Recv(wave2d.recz[0], survey.nr * wave2d.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
-                        sjwritesu(profile[0], svy.nr, nt, sizeof(float), dt, is + mpiid, recfile);
+                        sjwritesu(wave2d.recz[0], survey.nr, wave2d.nt, sizeof(float), source.dt, is+mpiid, wave2d.reczfile);
                     }
                 }
             } else {
-                //! Information
-#ifdef GFDOPENMP_
-                tend = omp_get_wtime();
-                runtime = tend - tstart;
-#else
+                MPI_Send(wave2d.recz[0], survey.nr * wave2d.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
                 tend = (double) clock();
-                runtime = (tend - tstart) / CLOCKS_PER_SEC;
-#endif
-
-                //! Commuicaion
-                MPI_Send(&svy, sjgetsvynum(), MPI_INT, 0, 98, MPI_COMM_WORLD);
-                MPI_Send(profile[0], svy.nr * nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
-                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, ns, runtime);
+                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, survey.ns,
+                       (tend - tstart) / CLOCKS_PER_SEC);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
-                       svy.sx + svy.lx0, svy.sz + svy.lz0, rx[0] + svy.lx0, rx[svy.nr - 1] + svy.lx0, rz[0] + svy.lz0,
-                       rz[svy.nr - 1] + svy.lz0);
+                       survey.sx + survey.x0, survey.sz + survey.z0,
+                       survey.rx[0] + survey.x0, survey.rx[survey.nr - 1] + survey.x0,
+                       survey.rz[0] + survey.z0, survey.rz[survey.nr - 1] + survey.z0);
             }
 
-            //------------------------ Free memory ------------------------//
-            sjmcheckfree2d(lvp);
-            sjmcheckfree2d(profile);
-            sjmcheckfree3d(snap);
+            //! Free
+            sjcheckfree2d((void **)geo2d.vp2d);
+            sjcheckfree2d((void **)wave2d.recz);
+            sjcheckfree3d((void ***)wave2d.snapz2d);
         }
 
         //------------------------ Information ------------------------//
         if (rankid == 0) {
-#ifdef GFDOPENMP_
-            Tend = omp_get_wtime();
-            Runtime = Tend - Tstart;
-#else
             Tend = (double) clock();
-            Runtime = (Tend - Tstart) / CLOCKS_PER_SEC;
-#endif
-            printf("Constant density acoustic simulation complete - time=%fs.\n", Runtime);
+            printf("Constant density acoustic simulation complete - time=%fs.\n", (Tend - Tstart) / CLOCKS_PER_SEC);
         }
 
-        //------------------------ Free memory ------------------------//
-        sjmcheckfree1d(wavelet);
-        sjmcheckfree1d(ry);
-        sjmcheckfree1d(rx);
-        sjmcheckfree1d(rz);
-        sjmcheckfree2d(gvp);
+    } else {
+        printf("\nExamples:   sjmpiawsgfd2d survey=survey.su vp=vp.su recz=recz.su nt=3001\n");
+        sjbasicinformation();
     }
 
-    //------------------------ MPI finish ------------------------//
+
     MPI_Finalize();
 
     return 0;

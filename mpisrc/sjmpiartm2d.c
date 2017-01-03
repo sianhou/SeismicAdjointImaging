@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf("---------------- 2D Acoustic LSRTM start ----------------\n");
+            printf("------------------------ 2D Acoustic RTM start ------------------------\n");
         }
 
         //! Source
@@ -109,22 +109,26 @@ int main(int argc, char *argv[]) {
         }
 
         //! Reduce
-        if(rankid == 0) {
-            MPI_Reduce(MPI_IN_PLACE,geo.gipp2d[0],survey.gnx*survey.gnz,MPI_FLOAT,MPI_SUM,0,MPI_COMM_WORLD);
-            MPI_Reduce(MPI_IN_PLACE,nmig[0],survey.gnx*survey.gnz,MPI_FLOAT,MPI_SUM,0,MPI_COMM_WORLD);
+        if (rankid == 0) {
+            MPI_Reduce(MPI_IN_PLACE, geo.gipp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(MPI_IN_PLACE, nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         } else {
-            MPI_Reduce(geo.gipp2d[0],geo.gipp2d[0],survey.gnx*survey.gnz,MPI_FLOAT,MPI_SUM,0,MPI_COMM_WORLD);
-            MPI_Reduce(nmig[0],nmig[0],survey.gnx*survey.gnz,MPI_FLOAT,MPI_SUM,0,MPI_COMM_WORLD);
+            MPI_Reduce(geo.gipp2d[0], geo.gipp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(nmig[0], nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         }
 
         MPI_Barrier(MPI_COMM_WORLD);
 
-        if(rankid == 0) {
+        if (rankid == 0) {
             //! Source
-            sjprojaddeq2d(geo.gipp2d,nmig,0,0,survey.gnx,survey.gnz);
+            sjprojaddeq2d(geo.gipp2d, nmig, 0, 0, survey.gnx, survey.gnz);
+
+            //! Output
+            sjwritesuall(geo.gipp2d[0], survey.gnx, survey.gnz, geo.ds, geo.ippfile);
+
             //! Time
             Tend = (double) clock();
-            printf("Acoustic RTM complete - time=%fs.\n",(Tend-Tstart)/CLOCKS_PER_SEC);
+            printf("Acoustic RTM complete - time=%fs.\n\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
         }
 
         //! Free

@@ -60,7 +60,7 @@ int main(int argc, char *argv[]) {
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf("---------------- 2D Acoustic LSRTM start ----------------\n");
+            printf("------------------------ 2D Acoustic LSRTM start ------------------------\n");
         }
 
         for (iter = 0; iter < 10; ++iter) {

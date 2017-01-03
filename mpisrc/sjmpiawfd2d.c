@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf("---------------- 2D Acoustic simulation start  ----------------\n");
+            printf("------------------------ 2D Acoustic simulation start  ------------------------\n");
         }
 
         //! Source
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
         //------------------------ Information ------------------------//
         if (rankid == 0) {
             Tend = (double) clock();
-            printf("2D acoustic simulation complete - time=%fs.\n", (Tend - Tstart) / CLOCKS_PER_SEC);
+            printf("2D acoustic simulation complete - time=%fs.\n\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
         }
 
     } else {

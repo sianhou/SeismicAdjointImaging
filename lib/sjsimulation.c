@@ -3,6 +3,7 @@
 //
 
 #include "sjsimulation.h"
+#include "sjinc.h"
 
 //! Survey
 int sjssurvey_init(sjssurvey *ptr) {
@@ -220,11 +221,24 @@ int sjsgeo_getparas2d(sjsgeo *ptr, int argc, char **argv, char *info) {
             return 0;
         } else {
             if (!sjmgets("vp", ptr->vpfile)) {
-                printf("ERROR: Should input 2D vp file!\n");
+                printf("ERROR: Should set vp file!\n");
                 exit(0);
             }
             if (!sjmgetf("ds", ptr->ds)) ptr->ds = 10.0;
             if (!sjmgeti("nb", ptr->nb)) ptr->nb = 15;
+
+            return 1;
+        }
+    }
+    if (strcmp(info, "ipp") == 0) {
+        if (argc == 1) {
+            printf("* ipp:        Image file of P-P wave.\n");
+            return 0;
+        } else {
+            if (!sjmgets("ipp", ptr->ippfile)) {
+                printf("ERROR: Should set ipp file!\n");
+                exit(0);
+            }
 
             return 1;
         }

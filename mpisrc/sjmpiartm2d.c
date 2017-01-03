@@ -52,6 +52,7 @@ int main(int argc, char *argv[]) {
 
         //! Model
         float **nmig = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
+        geo.gipp2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
         geo.gvp2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
         sjreadsuall(geo.gvp2d[0], survey.gnx, survey.gnz, geo.vpfile);
         MPI_Bcast(geo.gvp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
@@ -108,18 +109,13 @@ int main(int argc, char *argv[]) {
                    survey.rz[0] + survey.z0, survey.rz[survey.nr - 1] + survey.z0);
         }
 
-        //! Reduce
-        if (rankid == 0) {
-            MPI_Reduce(MPI_IN_PLACE, geo.gipp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(MPI_IN_PLACE, nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-        } else {
-            MPI_Reduce(geo.gipp2d[0], geo.gipp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(nmig[0], nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-        }
-
         MPI_Barrier(MPI_COMM_WORLD);
 
         if (rankid == 0) {
+            //! Reduce
+            MPI_Reduce(MPI_IN_PLACE, geo.gipp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(MPI_IN_PLACE, nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+
             //! Source
             sjprojaddeq2d(geo.gipp2d, nmig, 0, 0, survey.gnx, survey.gnz);
 
@@ -129,10 +125,15 @@ int main(int argc, char *argv[]) {
             //! Time
             Tend = (double) clock();
             printf("Acoustic RTM complete - time=%fs.\n\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
+        } else {
+            //! Reduce
+            MPI_Reduce(geo.gipp2d[0], geo.gipp2d[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(nmig[0], nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         }
 
         //! Free
         sjmfree1d(source.wavelet);
+        sjmfree2d(geo.gipp2d);
         sjmfree2d(geo.gvp2d);
         sjmfree2d(nmig);
 

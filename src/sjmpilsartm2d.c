@@ -133,7 +133,6 @@ int main(int argc, char *argv[]) {
                 for (ix = 0; ix < survey.gnx; ++ix)
                     for (iz = 0; iz < survey.gnz; ++iz)
                         geo.gipp2d[ix][iz] += gipp2d[ix][iz];
-
         }
         
         if (rankid == 0) {

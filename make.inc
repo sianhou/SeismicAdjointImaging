@@ -14,7 +14,7 @@ PLAT=LINUX
 # Compilers
 #-----------------------------------------------------------------------------
 
-CC=gcc
+CC=icc
 MPICC=mpicc
 FC=gfortran
 

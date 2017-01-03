@@ -63,22 +63,22 @@ if ( MPI_FOUND )
     find_library(mpisj ${SeismicAdjointImaging_BINARY_DIR}/lib)
 
     #! sgmpiawsgfd2d
-    set(SOURCEFILE mpisrc/sjmpiawsgfd2d.c)
+    set(SOURCEFILE src/sjmpiawsgfd2d.c)
     add_executable(sjmpiawsgfd2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiawsgfd2d mpisj m)
 
     #! sgmpiawfd2d
-    set(SOURCEFILE mpisrc/sjmpiawfd2d.c)
+    set(SOURCEFILE src/sjmpiawfd2d.c)
     add_executable(sjmpiawfd2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiawfd2d mpisj m)
 
     #! sgmpiartm2d
-    set(SOURCEFILE mpisrc/sjmpiartm2d.c)
+    set(SOURCEFILE src/sjmpiartm2d.c)
     add_executable(sjmpiartm2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiartm2d mpisj m)
 
     #! sgmpilsartm2d
-    set(SOURCEFILE mpisrc/sjmpilsartm2d.c)
+    set(SOURCEFILE src/sjmpilsartm2d.c)
     add_executable(sjmpilsartm2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpilsartm2d mpisj m)
 endif( MPI_FOUND )

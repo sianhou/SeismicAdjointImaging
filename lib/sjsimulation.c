@@ -58,9 +58,9 @@ int sjssurvey_display(sjssurvey *ptr) {
     printf("ns=%d\n", ptr->ns);
     printf("maxnr=%d\n", ptr->maxnr);
     printf("nparas=%d\n", ptr->nparas);
-    printf("ry=%d\n", ptr->ry);
-    printf("rx=%d\n", ptr->rx);
-    printf("rz=%d\n", ptr->rz);
+    printf("ry=%p\n", ptr->ry);
+    printf("rx=%p\n", ptr->rx);
+    printf("rz=%p\n", ptr->rz);
     printf("surveyfile=%s\n", ptr->surveyfile);
     return 1;
 }
@@ -157,7 +157,7 @@ int sjssource_display(sjssource *ptr) {
     printf("fp=%f\n", ptr->fp);
     printf("amp=%f\n", ptr->amp);
     printf("srcdecay=%f\n", ptr->srcdecay);
-    printf("wavelet=%d\n", ptr->wavelet);
+    printf("wavelet=%p\n", ptr->wavelet);
     return 1;
 }
 
@@ -201,6 +201,7 @@ int sjsgeo_init(sjsgeo *ptr) {
     ptr->vpfile = NULL;
     ptr->vsfile = NULL;
     ptr->ippfile = NULL;
+    ptr->lsippfile = NULL;
 
     return 1;
 }
@@ -209,12 +210,13 @@ int sjsgeo_display(sjsgeo *ptr) {
     printf("Display geo information:\n");
     printf("nb=%d\n", ptr->nb);
     printf("ds=%f\n", ptr->ds);
-    printf("gvp2d=%d\n", ptr->gvp2d);
-    printf("gvs2d=%d\n", ptr->gvs2d);
-    printf("vp2d=%d\n", ptr->vp2d);
+    printf("gvp2d=%p\n", ptr->gvp2d);
+    printf("gvs2d=%p\n", ptr->gvs2d);
+    printf("vp2d=%p\n", ptr->vp2d);
     printf("vpfile=%s\n", ptr->vpfile);
     printf("vsfile=%s\n", ptr->vsfile);
     printf("ippfile=%s\n", ptr->ippfile);
+    printf("lsippfile=%s\n", ptr->lsippfile);
     return 1;
 }
 
@@ -250,6 +252,22 @@ int sjsgeo_getparas2d(sjsgeo *ptr, int argc, char **argv, char *info) {
             return 1;
         }
     }
+
+    if (strcmp(info, "lsipp") == 0) {
+        if (argc == 1) {
+            printf("* lsipp:      Least square image file of P-P wave.\n");
+            return 0;
+        } else {
+            if (!sjmgets("lsipp", ptr->lsippfile)) {
+                printf("ERROR: Should set lsipp file!\n");
+                exit(0);
+            }
+
+            return 1;
+        }
+    }
+
+    return 0;
 }
 
 //! wave
@@ -280,12 +298,12 @@ int sjswave_display(sjswave *ptr) {
     printf("nsnap=%d\n", ptr->nsnap);
     printf("ycutdirect=%d\n", ptr->ycutdirect);
 
-    printf("recy=%f\n", ptr->recy);
-    printf("recx=%d\n", ptr->recx);
-    printf("recz=%d\n", ptr->recz);
-    printf("snapy2d=%d\n", ptr->snapy2d);
-    printf("snapx2d=%s\n", ptr->snapx2d);
-    printf("snapz2d=%s\n", ptr->snapz2d);
+    printf("recy=%p\n", ptr->recy);
+    printf("recx=%p\n", ptr->recx);
+    printf("recz=%p\n", ptr->recz);
+    printf("snapy2d=%p\n", ptr->snapy2d);
+    printf("snapx2d=%p\n", ptr->snapx2d);
+    printf("snapz2d=%p\n", ptr->snapz2d);
 
     printf("recyfile=%s\n", ptr->recyfile);
     printf("recxfile=%s\n", ptr->recxfile);
@@ -907,7 +925,7 @@ void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave
     /* ! Wavefield                                                                                */
     /**********************************************************************************************/
 
-    //! Wavefield revese time exploration
+    //! Wavefield reverse time exploration
     for (it = nt - 1; it >= 0; --it) {
 
         if (wave->yadjointbc == 1) {
@@ -930,6 +948,7 @@ void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave
         //! Wavefield
         if ((it % jsnap) == 0) {
             if (wave->yadjointbc == 1) {
+
                 for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
                     for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
                         geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
@@ -939,6 +958,7 @@ void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave
                                 wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
                     }
                 }
+
             } else {
 
             }

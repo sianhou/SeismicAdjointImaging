@@ -42,7 +42,7 @@ int main(int argc, char *argv[]) {
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf(" ---------------- 2D Acoustic simulation start  ---------------- \n");
+            printf("---------------- 2D Acoustic simulation start  ----------------\n");
         }
 
         //! Source

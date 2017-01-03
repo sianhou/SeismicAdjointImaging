@@ -5,7 +5,7 @@
 #ifndef SJI_SJINC_H
 #define SJI_SJINC_H
 
-#include <malloc.h>
+#include <sys/malloc.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -55,7 +55,7 @@ typedef struct {
     float **vp2d, **vs2d;
     float **gipp2d;
     float **ipp2d, **nipp2d;
-    char *vpfile, *vsfile, *ippfile;
+    char *vpfile, *vsfile, *ippfile, *lsippfile;
 } sjsgeo;
 
 //! wave

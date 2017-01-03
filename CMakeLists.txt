@@ -12,14 +12,6 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/bin)
 #--------------------------------------------------------------------------------------------------
 add_definitions("-O3")
 
-#FIND_PACKAGE(OpenMP REQUIRED)
-#if(OPENMP_FOUND)
-#    message("OPENMP FOUND")
-#    add_definitions("-DGFDOPENMP_")
-#    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
-#    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
-#endif()
-
 #! Library
 set(SJINC lib/sjinc.h)
 set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjsimulation.c)
@@ -84,4 +76,9 @@ if ( MPI_FOUND )
     set(SOURCEFILE mpisrc/sjmpiartm2d.c)
     add_executable(sjmpiartm2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiartm2d mpisj m)
+
+    #! sgmpilsartm2d
+    set(SOURCEFILE mpisrc/sjmpilsartm2d.c)
+    add_executable(sjmpilsartm2d ${SOURCEFILE} ${SJINC})
+    target_link_libraries(sjmpilsartm2d mpisj m)
 endif( MPI_FOUND )

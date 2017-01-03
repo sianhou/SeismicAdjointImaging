@@ -20,10 +20,7 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
         printf("---------------- 2D Acoustic RTM start ----------------\n");
     }
 
-    float **mig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));
     float **nmig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));
-    float **gnmig = (float **) sjalloc2d(survey->gnx, survey->gnz, sizeof(float));
-
     MPI_Bcast(geo->gvp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     //! Rtm
@@ -59,7 +56,7 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
         sjlaplcefilter2d(geo->ipp2d, survey->nx, survey->nz);
 
         //! Stacking
-        sjprojaddeq2d(mig, geo->ipp2d, survey->x0, survey->z0, survey->nx, survey->nz);
+        sjprojaddeq2d(geo->gipp2d, geo->ipp2d, survey->x0, survey->z0, survey->nx, survey->nz);
         sjprojaddeq2d(nmig, geo->nipp2d, survey->x0, survey->z0, survey->nx, survey->nz);
 
         //! Free
@@ -80,14 +77,20 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
     }
 
     //! Communication
-    MPI_Reduce(mig[0], geo->gipp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-    MPI_Reduce(nmig[0], gnmig[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    if(rankid ==0) {
+        MPI_Reduce(MPI_IN_PLACE, geo->gipp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(MPI_IN_PLACE, nmig[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    } else {
+        MPI_Reduce(geo->gipp2d[0], geo->gipp2d[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+        MPI_Reduce(nmig[0], nmig[0], survey->gnx * survey->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+    }
+
     MPI_Barrier(MPI_COMM_WORLD);
 
     if (rankid == 0) {
 
         //! Source compenate
-        sjprojdiveq2d(geo->gipp2d, gnmig, 0, 0, survey->gnx, survey->gnz);
+        sjprojdiveq2d(geo->gipp2d, nmig, 0, 0, survey->gnx, survey->gnz);
 
         //! Time
         Tend = (double) clock();
@@ -95,9 +98,7 @@ int sjartm2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
     }
 
     //! Free
-    sjmcheckfree2d(mig);
     sjmcheckfree2d(nmig);
-    sjmcheckfree2d(gnmig);
 
     return 1;
 }

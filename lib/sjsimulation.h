@@ -109,6 +109,6 @@ void sjawrtsgfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wa
 void sjawfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
 
 //! Two dimension acoustic reverse time simulation based on constant density equation
-void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
+void sjawrtmfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
 
 #endif //SJI_SIMULATION_H

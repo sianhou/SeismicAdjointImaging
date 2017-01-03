@@ -3,7 +3,6 @@
 //
 
 #include "sjsimulation.h"
-#include "sjinc.h"
 
 //! Survey
 int sjssurvey_init(sjssurvey *ptr) {
@@ -194,14 +193,8 @@ int sjsgeo_init(sjsgeo *ptr) {
     ptr->vp2d = NULL;
     ptr->vp2d = NULL;
 
-    ptr->gipp2d = NULL;
-    ptr->ipp2d = NULL;
-    ptr->nipp2d = NULL;
-
     ptr->vpfile = NULL;
     ptr->vsfile = NULL;
-    ptr->ippfile = NULL;
-    ptr->lsippfile = NULL;
 
     return 1;
 }
@@ -215,8 +208,6 @@ int sjsgeo_display(sjsgeo *ptr) {
     printf("vp2d=%p\n", ptr->vp2d);
     printf("vpfile=%s\n", ptr->vpfile);
     printf("vsfile=%s\n", ptr->vsfile);
-    printf("ippfile=%s\n", ptr->ippfile);
-    printf("lsippfile=%s\n", ptr->lsippfile);
     return 1;
 }
 
@@ -229,7 +220,7 @@ int sjsgeo_getparas2d(sjsgeo *ptr, int argc, char **argv, char *info) {
             return 0;
         } else {
             if (!sjmgets("vp", ptr->vpfile)) {
-                printf("ERROR: Should set 2D vp file!\n");
+                printf("ERROR: Should input 2D vp file!\n");
                 exit(0);
             }
             if (!sjmgetf("ds", ptr->ds)) ptr->ds = 10.0;
@@ -238,36 +229,6 @@ int sjsgeo_getparas2d(sjsgeo *ptr, int argc, char **argv, char *info) {
             return 1;
         }
     }
-
-    if (strcmp(info, "ipp") == 0) {
-        if (argc == 1) {
-            printf("* ipp:        Image file of P-P wave.\n");
-            return 0;
-        } else {
-            if (!sjmgets("ipp", ptr->ippfile)) {
-                printf("ERROR: Should set ipp file!\n");
-                exit(0);
-            }
-
-            return 1;
-        }
-    }
-
-    if (strcmp(info, "lsipp") == 0) {
-        if (argc == 1) {
-            printf("* lsipp:      Least square image file of P-P wave.\n");
-            return 0;
-        } else {
-            if (!sjmgets("lsipp", ptr->lsippfile)) {
-                printf("ERROR: Should set lsipp file!\n");
-                exit(0);
-            }
-
-            return 1;
-        }
-    }
-
-    return 0;
 }
 
 //! wave
@@ -867,7 +828,7 @@ void sjawfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) 
 }
 
 //! Two dimension acoustic reverse time simulation based on constant density equation
-void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
+void sjawrtmfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
 
     //! Runtime
     int it, ir, ix, iz;
@@ -928,13 +889,9 @@ void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave
     //! Wavefield reverse time exploration
     for (it = nt - 1; it >= 0; --it) {
 
-        if (wave->yadjointbc == 1) {
-            for (ir = 0; ir < nr; ir++)
-                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wave->recz[ir][it];
-        } else {
-            for (ir = 0; ir < nr; ir++)
-                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] += wave->recz[ir][it];
-        }
+        //! Source
+        for (ir = 0; ir < nr; ir++)
+            p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wave->recz[ir][it];
 
         //! Calculate velocity
         for (ix = marg; ix < nxb - marg; ix++)
@@ -947,21 +904,15 @@ void sjawrtfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave
 
         //! Wavefield
         if ((it % jsnap) == 0) {
-            if (wave->yadjointbc == 1) {
-
-                for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
-                    for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
-                        geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
-                                wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
-                        geo->nipp2d[ix - nb - marg][iz - nb - marg] +=
-                                wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
-                                wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
+            for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
+                for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
+                    geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
+                            wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
+                    geo->nipp2d[ix - nb - marg][iz - nb - marg] +=
+                            wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
+                            wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
                     }
                 }
-
-            } else {
-
-            }
         }
 
         //! Update

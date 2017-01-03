@@ -15,10 +15,10 @@ FUNCS = $(patsubst %.c, %  , $(PROGS))
 all : $(OBJES) $(FUNCS)
 
 $(FUNCS) : $(patsubst %, %.o, $@) $(include)
-	$(MPICC) $(MPICFLAGS) $(patsubst %, %.o, $@) $(libary) -o ../bin/$@ -I$(include)
+	$(MPICC) $(CFLAGS) $(patsubst %, %.o, $@) $(libary) -o ../bin/$@ -I$(include)
 
 %.o : %.c
-	$(MPICC) -c $(MPICFLAGS) $< -o $@ -I$(include)
+	$(MPICC) -c $(CFLAGS) $< -o $@ -I$(include)
 
 clean:
 	rm *.a -f

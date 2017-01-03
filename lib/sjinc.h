@@ -5,16 +5,12 @@
 #ifndef SJI_SJINC_H
 #define SJI_SJINC_H
 
-#include <sys/malloc.h>
+#include <malloc.h>
 #include <math.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
 #include <time.h>
-
-#ifdef GFDOPENMP_
-#include <omp.h>
-#endif
 
 //! complex
 typedef struct fcomplex_ {
@@ -42,7 +38,6 @@ typedef struct {
 //! source
 typedef struct {
     int k1, srcrange, srctrunc;
-
     float dt, fp, amp, srcdecay;
     float *wavelet;
 } sjssource;
@@ -53,9 +48,9 @@ typedef struct {
     float ds;
     float **gvp2d, **gvs2d;
     float **vp2d, **vs2d;
-    float **gipp2d;
     float **ipp2d, **nipp2d;
-    char *vpfile, *vsfile, *ippfile, *lsippfile;
+    float **gipp2d;
+    char *vpfile, *vsfile, *ippfile,*lsippfile;
 } sjsgeo;
 
 //! wave
@@ -64,18 +59,14 @@ typedef struct {
     float **recy, **recx, **recz;
     float ***snapy2d, ***snapx2d, ***snapz2d;
     char *recyfile, *recxfile, *reczfile;
-    int yadjointbc; //! == 1: process adjoint wavefield as boundary condition
-                    //! != 1: process adjoint wavefield as source
 } sjswave;
 
 #define pi 3.141592653589793
-
-#include "sjsimulation.h"
 
 #include "sjabc.h"
 #include "sjfile.h"
 #include "sjmalloc.h"
 #include "sjmath.h"
-
+#include "sjsimulation.h"
 
 #endif //SJI_SJINC_H

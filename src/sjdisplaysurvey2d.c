@@ -7,99 +7,90 @@
 #include "../lib/sjfile.h"
 
 int main(int argc, char *argv[]) {
+
+    sjssurvey survey;
+    sjssurvey_init(&survey);
+
     if (argc == 1) {
         printf("\nDisplay 2D survey.\n\n");
-        printf("sjin:   Input a survey file.\n");
-        printf("is:      The sequence number of shot to display, default = 1.\n");
-        printf("         1<= is <= ns.\n\n");
-        printf("flag:    1 - Display local information, default = 1.\n");
-        printf("Example: sjdisplaysurvey2d sgin=svy.su\n");
+        sjssurvey_getparas(&survey, argc, argv);
+        printf("  is:         The sequence number of shot to display, default = 1.\n");
+        printf("              1<= is <= ns.\n\n");
+        printf("  flag:       1 - Display local information, default = 1.\n");
+        printf("  Example:    sjdisplaysurvey2d survey=svy.su\n");
         sjbasicinformation();
-    } else {
-        char *inputname;
-        if (!sjmgets("sjin", inputname)) {
-            printf("ERROR: Should input survey in program sgdisplaysurvey2d!\n");
-            exit(0);
-        };
-
-        int is, ir, ns, nr, flag;
-        sury svy;
-        int *ry = NULL, *rx = NULL, *rz = NULL;
-        //! Get parameters
-        if (!sjmgeti("is", is)) is = 1;
-        if (!sjmgeti("flag", flag)) flag = 1;
-        ns = sjgetsvyns(inputname);
-        nr = sjgetsvynr(inputname);
-        //! Allocate parameters
-        ry = (int *) sjalloc1d(nr, sizeof(int));
-        rx = (int *) sjalloc1d(nr, sizeof(int));
-        rz = (int *) sjalloc1d(nr, sizeof(int));
-
-        if (is > ns) {
-            printf("ERROR: Shot sequence number exceed ns!\n");
-            exit(0);
-        } else {
-
-            if (flag) {
-                sjreadsurvey(is - 1, &svy, ry, rx, rz, inputname);
-                printf("\n");
-                printf("Display local survey information(in local coordinate): %d\n", ns);
-                printf("\n");
-                printf("Total shot number: %d\n", ns);
-                printf("Single shot sequence: %d\n", is);
-                printf("Single shot position: sx=%d sz=%d\n", svy.sx, svy.sz);
-                printf("\n");
-                printf("Total model size: gxl=%d gzl=%d\n", svy.gxl, svy.gzl);
-                printf("Local model size: lxl=%d lzl=%d\n", svy.lxl, svy.lzl);
-                printf("Local model begin: lx0=%d lz0=%d\n", svy.lx0, svy.lz0);
-                printf("\n");
-                printf("Local receiver number: nr=%d\n", svy.nr);
-                printf("Local receiver position: rx=%-4d ", rx[0]);
-
-                for (ir = 1; ir < 3; ++ir) {
-                    if (ir < nr)
-                        if (ir != nr - 1)
-                            printf("%-4d ", rx[ir]);
-                }
-                printf("... %-4d\n", rx[nr - 1]);
-                printf("Local receiver position: rz=%-4d ", rz[0]);
-                for (ir = 1; ir < 3; ++ir) {
-                    if (ir < nr)
-                        if (ir != nr - 1)
-                            printf("%-4d ", rz[ir]);
-                }
-                printf("... %-4d\n", rz[nr - 1]);
-            } else {
-                sjreadsurvey(is - 1, &svy, ry, rx, rz, inputname);
-                printf("\n");
-                printf("Display global survey information(in global coordinate): %d\n", ns);
-                printf("\n");
-                printf("Total shot number: %d\n", ns);
-                printf("Single shot sequence: %d\n", is);
-                printf("Single shot position: sx=%d sz=%d\n", svy.sx + svy.lx0, svy.sz + svy.lz0);
-                printf("\n");
-                printf("Total model size: gxl=%d gzl=%d\n", svy.gxl, svy.gzl);
-                printf("Local model size: lxl=%d lzl=%d\n", svy.lxl, svy.lzl);
-                printf("Local model begin: lx0=%d lz0=%d\n", svy.lx0, svy.lz0);
-                printf("\n");
-                printf("Local receiver number: nr=%d\n", svy.nr);
-                printf("Local receiver position: rx=%-4d ", rx[0] + svy.lx0);
-
-                for (ir = 1; ir < 3; ++ir) {
-                    if (ir < nr)
-                        if (ir != nr - 1)
-                            printf("%-4d ", rx[ir] + svy.lx0);
-                }
-                printf("... %-4d\n", rx[nr - 1] + svy.lx0);
-                printf("Local receiver position: rz=%-4d ", rz[0] + svy.lz0);
-                for (ir = 1; ir < 3; ++ir) {
-                    if (ir < nr)
-                        if (ir != nr - 1)
-                            printf("%-4d ", rz[ir] + svy.lz0);
-                }
-                printf("... %-4d\n", rz[nr - 1] + svy.lz0);
-            }
-        }
     }
+
+    int is, ir, flag;
+
+    //! Get parameters
+    if (!sjmgeti("is", is)) is = 1;
+    if (!sjmgeti("flag", flag)) flag = 1;
+
+    sjssurvey_getparas(&survey, argc, argv);
+
+    //! Check
+    if (is > survey.ns) {
+        printf("ERROR: Shot sequence number exceed ns!\n");
+        exit(0);
+    }
+
+    sjssurvey_readis(&survey, is - 1);
+    if (flag) {
+        printf("\n");
+        printf("Display local survey information(in local coordinate)\n");
+        printf("\n");
+        printf("Total shot number: %d\n", survey.ns);
+        printf("Single shot sequence: %d\n", is);
+        printf("Single shot position: sx=%d sz=%d\n", survey.sx, survey.sz);
+        printf("\n");
+        printf("Local model size: nx=%d nz=%d\n", survey.nx, survey.nz);
+        printf("Local model begin: x0=%d z0=%d\n", survey.x0, survey.z0);
+        printf("Global model size: gnx=%d gnz=%d\n", survey.gnx, survey.gnz);
+        printf("\n");
+        printf("Receiver number: nr=%d\n", survey.nr);
+        printf("Receiver position (in local): rx=%-4d ", survey.rx[0]);
+        for (ir = 1; ir < 3; ++ir) {
+            if (ir < survey.nr)
+                if (ir != survey.nr - 1)
+                    printf("%-4d ", survey.rx[ir]);
+        }
+        printf("... %-4d\n", survey.rx[survey.nr - 1]);
+        printf("Receiver position (in local): rz=%-4d ", survey.rz[0]);
+        for (ir = 1; ir < 3; ++ir) {
+            if (ir < survey.nr)
+                if (ir != survey.nr - 1)
+                    printf("%-4d ", survey.rz[ir]);
+        }
+        printf("... %-4d\n", survey.rz[survey.nr - 1]);
+    } else {
+        printf("\n");
+        printf("Display global survey information(in global coordinate)");
+        printf("\n");
+        printf("Total shot number: %d\n", survey.ns);
+        printf("Single shot sequence: %d\n", is);
+        printf("Single shot position: sx=%d sz=%d\n", survey.sx + survey.x0, survey.sz + survey.z0);
+        printf("\n");
+        printf("Local model size: nx=%d nz=%d\n", survey.nx, survey.nz);
+        printf("Local model begin: x0=%d z0=%d\n", survey.x0, survey.z0);
+        printf("Global model size: gnx=%d gnz=%d\n", survey.gnx, survey.gnz);
+        printf("\n");
+        printf("Receiver number: nr=%d\n", survey.nr);
+        printf("Receiver position (in global): rx=%-4d ", survey.rx[0] + survey.x0);
+        for (ir = 1; ir < 3; ++ir) {
+            if (ir < survey.nr)
+                if (ir != survey.nr - 1)
+                    printf("%-4d ", survey.rx[ir] + survey.x0);
+        }
+        printf("... %-4d\n", survey.rx[survey.nr - 1] + survey.x0);
+        printf("Receiver position (in global): rz=%-4d ", survey.rz[0] + survey.z0);
+        for (ir = 1; ir < 3; ++ir) {
+            if (ir < survey.nr)
+                if (ir != survey.nr - 1)
+                    printf("%-4d ", survey.rz[ir] + survey.z0);
+        }
+        printf("... %-4d\n", survey.rz[survey.nr - 1] + survey.z0);
+    }
+
     return 0;
 }

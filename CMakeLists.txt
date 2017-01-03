@@ -25,14 +25,6 @@ set(TEST_ASGFD test/test_asgfd.c)
 add_executable(test_asgfd ${TEST_ASGFD} ${SJINC})
 target_link_libraries(test_asgfd sj m)
 
-#! sjawsgfd2d
-set(SOURCEFILE src/sjawsgfd2d.c)
-add_executable(sjawsgfd2d ${SOURCEFILE} ${SJINC})
-target_link_libraries(sjawsgfd2d sj m)
-#! sgartm2d
-set(SOURCEFILE src/sjartm2d.c)
-add_executable(sjartm2d ${SOURCEFILE} ${SJINC})
-target_link_libraries(sjartm2d sj m)
 #! sgbin2su
 set(SOURCEFILE src/sjbin2su.c)
 add_executable(sjbin2su ${SOURCEFILE} ${SJINC})
@@ -49,8 +41,8 @@ target_link_libraries(sjsurvey2d sj m)
 #--------------------------------------------------------------------------------------------------
 # MPI
 #--------------------------------------------------------------------------------------------------
-set(CMAKE_CXX_COMPILER "/usr/local/bin/mpicxx")
-set(CMAKE_C_COMPILER "/usr/local/bin/mpicc")
+set(CMAKE_CXX_COMPILER "mpicxx")
+set(CMAKE_C_COMPILER "mpicc")
 
 find_package ( MPI )
 if ( MPI_FOUND )

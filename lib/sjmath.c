@@ -4,31 +4,6 @@
 
 #include "sjmath.h"
 
-#define B60 (-2.982778e+0f)
-#define B61 ( 1.714286e+0f)
-#define B62 (-2.678571e-1f)
-#define B63 ( 5.291005e-2f)
-#define B64 (-8.928571e-3f)
-#define B65 ( 1.038961e-3f)
-#define B66 (-6.012506e-5f)
-
-#define SATOFDD2N1(a, ix, iz)(B60* a[ix][iz]+ \
-                            B61*(a[ix][iz+1]+a[ix][iz-1]) + \
-                            B62*(a[ix][iz+2]+a[ix][iz-2]) + \
-                            B63*(a[ix][iz+3]+a[ix][iz-3]) + \
-                            B64*(a[ix][iz+4]+a[ix][iz-4]) + \
-                            B65*(a[ix][iz+5]+a[ix][iz-5]) + \
-                            B66*(a[ix][iz+6]+a[ix][iz-6]) )
-
-#define SATOFDD2N2(a, ix, iz)(B60* a[ix][iz]+ \
-                            B61*(a[ix+1][iz]+a[ix-1][iz]) + \
-                            B62*(a[ix+2][iz]+a[ix-2][iz]) + \
-                            B63*(a[ix+3][iz]+a[ix-3][iz]) + \
-                            B64*(a[ix+4][iz]+a[ix-4][iz]) + \
-                            B65*(a[ix+5][iz]+a[ix-5][iz]) + \
-                            B66*(a[ix+6][iz]+a[ix-6][iz]) )
-
-
 int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
 
     int it = 0;
@@ -94,6 +69,15 @@ void sjprojdiveq2d(float **input0, float **input1, int x0, int z0, int nx, int n
     for (ix = 0; ix < nx; ++ix)
         for (iz = 0; iz < nz; ++iz)
             input0[x0 + ix][z0 + iz] /= (input1[ix][iz] + 1.0e-4);
+}
+
+void sjimage2d(float ***input1, float ***input2, int nt, int nx, int nz, int mode, float **output) {
+    int ix, iz, it;
+    memset(output[0], 0, nx * nz * sizeof(float));
+    for (it = 0; it < nt; ++it)
+        for (ix = 0; ix < nx; ++ix)
+            for (iz = 0; iz < nz; ++iz)
+                output[ix][iz] += input1[it][ix][iz] * input2[it][ix][iz];
 }
 
 void sjlaplcefilter2d(float **input, int n2, int n1) {

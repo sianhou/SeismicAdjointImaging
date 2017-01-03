@@ -16,7 +16,6 @@ PLAT=LINUX
 
 CC=gcc
 MPICC=mpicc
-FC=gfortran
 
 #-----------------------------------------------------------------------------
 # Libraries

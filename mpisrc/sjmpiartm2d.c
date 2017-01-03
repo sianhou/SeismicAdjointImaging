@@ -82,7 +82,6 @@ int main(int argc, char *argv[]) {
             sjreadsu(wave.recz[0], survey.nr, wave.nt, sizeof(float), survey.tr, 0, wave.reczfile);
 
             //! Adjoint image
-            wave.ycutdirect = 0;
             sjawrtmfd2d(&source, &survey, &geo, &wave);
 
             //! Laplace filter

@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
             MPI_Reduce(MPI_IN_PLACE, nmig[0], survey.gnx * survey.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
             //! Source
-            sjprojaddeq2d(geo.gipp2d, nmig, 0, 0, survey.gnx, survey.gnz);
+            sjprojdiveq2d(geo.gipp2d, nmig, 0, 0, survey.gnx, survey.gnz);
 
             //! Output
             sjwritesuall(geo.gipp2d[0], survey.gnx, survey.gnz, geo.ds, geo.ippfile);

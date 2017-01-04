@@ -7,7 +7,7 @@
 int main(int argc, char *argv[]) {
 
     //! Runtime
-    int is = 0, flag = 1;
+    int is = 0, ix, iz, flag = 1;
     double tstart, tend, Tstart, Tend;
 
     //! MPI
@@ -117,6 +117,11 @@ int main(int argc, char *argv[]) {
 
             //! Source
             sjprojdiveq2d(geo.gipp2d, nmig, 0, 0, survey.gnx, survey.gnz);
+
+            //! Cut surface
+            for (ix = 0; ix < survey.gnx; ++ix)
+                for (iz = 0; iz < 50; ++iz)
+                    geo.gipp2d[ix][iz] = 0.0f;
 
             //! Output
             sjwritesuall(geo.gipp2d[0], survey.gnx, survey.gnz, geo.ds, geo.ippfile);

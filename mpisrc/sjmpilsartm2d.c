@@ -5,9 +5,17 @@
 #include "../lib/sjinc.h"
 #include <mpi.h>
 
-void sjascfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
+int sjfindabsmax1d(float *input, int n) {
+    int ii, index = 0;
+    for (ii = 0; ii < n; ++ii)
+        if (fabs(input[ii]) >= fabs(input[index]))
+            index = ii;
+    return index;
+}
 
-void sjawrtfd2dx(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
+void sjaswfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
+
+void sjlsawrtmfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave);
 
 int main(int argc, char *argv[]) {
 
@@ -86,7 +94,7 @@ int main(int argc, char *argv[]) {
                 //! Forward simulation
                 wave.recz = (float **) sjalloc2d(survey.nr, wave.nt, sizeof(float));
                 wave.snapz2d = (float ***) sjalloc3d(wave.nsnap, survey.nx, survey.nz, sizeof(float));
-                sjascfd2d(&source, &survey, &geo, &wave);
+                sjaswfd2d(&source, &survey, &geo, &wave);
 
                 //! Difference wavefield
                 float **recz = (float **) sjalloc2d(survey.nr, wave.nt, sizeof(float));
@@ -97,7 +105,7 @@ int main(int argc, char *argv[]) {
 
                 //! Backward simulation
                 memset(geo.ipp2d[0], 0, survey.nx * survey.nz * sizeof(float));
-                sjawrtfd2dx(&source, &survey, &geo, &wave);
+                sjlsawrtmfd2d(&source, &survey, &geo, &wave);
 
                 //! Stacking
                 sjprojaddeq2d(gipp2d, geo.ipp2d, survey.x0, survey.z0, survey.nx, survey.nz);
@@ -129,12 +137,30 @@ int main(int argc, char *argv[]) {
             MPI_Barrier(MPI_COMM_WORLD);
 
             //! Add
-            if (rankid == 0)
+            if (rankid == 0) {
+                int index = sjfindabsmax1d(gipp2d[0], survey.gnx * survey.gnz);
+                float norm = 1.0f / fabs(gipp2d[0][index]);
+
+                //! Opimization
                 for (ix = 0; ix < survey.gnx; ++ix)
                     for (iz = 0; iz < survey.gnz; ++iz)
-                        geo.gipp2d[ix][iz] += gipp2d[ix][iz];
+                        geo.gipp2d[ix][iz] -= 0.05 * gipp2d[ix][iz] * norm;
+
+                //! Cut surface
+                for (ix = 0; ix < survey.gnx; ++ix)
+                    for (iz = 0; iz < 50; ++iz)
+                        geo.gipp2d[ix][iz] = 0.0f;
+            }
+
+
+            char *output = (char *) sjalloc1d(2000, sizeof(char));
+            if (rankid == 0) {
+                sprintf(output, "%s-%d", geo.lsippfile, iter);
+                //! Output
+                sjwritesuall(geo.gipp2d[0], survey.gnx, survey.gnz, geo.ds, output);
+            }
         }
-        
+
         if (rankid == 0) {
             //! Output
             sjwritesuall(geo.gipp2d[0], survey.gnx, survey.gnz, geo.ds, geo.lsippfile);
@@ -156,7 +182,7 @@ int main(int argc, char *argv[]) {
 }
 
 //! Two dimension acoustic simulation based on constant density equation
-void sjascfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
+void sjaswfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
 
     //! Runtime
     int it, ir, ix, iz;
@@ -168,6 +194,7 @@ void sjascfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave)
     int srctrunc = source->srctrunc;
     int srcrange = source->srcrange;
     float dt = source->dt;
+    float dt2 = source->dt * source->dt;
     float srcdecay = source->srcdecay;
     float *wav = source->wavelet;
 
@@ -185,7 +212,7 @@ void sjascfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave)
     int nxb = nx + 2 * marg + 2 * nb;
     int nzb = nz + 2 * marg + 2 * nb;
     float ds = geo->ds;
-    float ids = source->dt * source->dt / ds / ds;
+    float ids2 = 1.0f / ds / ds;
     float **cp = (float **) sjalloc2d(nxb, nzb, sizeof(float));
     float **ipp = (float **) sjalloc2d(nxb, nzb, sizeof(float));
     sjextend2d(geo->vp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, cp);
@@ -242,18 +269,18 @@ void sjascfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave)
         //! Calculate laplace operator
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * ids;
+                p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * ids2;
 
         //! Calculate scatter wavefield
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                s2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(s1, ix, iz) + sjmfd2dn2(s1, ix, iz)) * ids
-                             + 2.0f * s1[ix][iz] - s0[ix][iz] + p2[ix][iz] * cp[ix][iz] * ipp[ix][iz];
+                s2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(s1, ix, iz) + sjmfd2dn2(s1, ix, iz)) * ids2 * dt2
+                             + 2.0f * s1[ix][iz] - s0[ix][iz] + p2[ix][iz] * ipp[ix][iz] * dt2;
 
         //! Calculate
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                p2[ix][iz] = p2[ix][iz] + 2.0f * p1[ix][iz] - p0[ix][iz];
+                p2[ix][iz] = p2[ix][iz] * dt2 + 2.0f * p1[ix][iz] - p0[ix][iz];
 
         //! Boundary condition
         sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
@@ -293,9 +320,8 @@ void sjascfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave)
     sjmfree2d(s0);
 }
 
-
 //! Two dimension acoustic reverse time simulation based on constant density equation
-void sjawrtfd2dx(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
+void sjlsawrtmfd2d(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wave) {
 
     //! Runtime
     int it, ir, ix, iz;
@@ -374,7 +400,7 @@ void sjawrtfd2dx(sjssource *source, sjssurvey *survey, sjsgeo *geo, sjswave *wav
                 for (iz = nb + marg; iz < nzb - nb - marg; iz++)
                     geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
                             wave->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
-                            (p0[ix][iz] - 2.0f * p1[ix][iz] + p2[ix][iz]) * dt * dt;
+                            (p0[ix][iz] - 2.0f * p1[ix][iz] + p2[ix][iz]) / dt / dt;
 
         //! Update
         memcpy(p2[0], p1[0], nxb * nzb * sizeof(float));

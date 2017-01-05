@@ -3,7 +3,6 @@
 //
 
 #include "sjsimulation.h"
-#include "sjinc.h"
 
 //! Survey
 int sjssurvey_init(sjssurvey *ptr) {
@@ -237,6 +236,19 @@ int sjsgeo_getparas2d(sjsgeo *ptr, int argc, char **argv, char *info) {
         } else {
             if (!sjmgets("ipp", ptr->ippfile)) {
                 printf("ERROR: Should set ipp file!\n");
+                exit(0);
+            }
+
+            return 1;
+        }
+    }
+    if (strcmp(info, "lsipp") == 0) {
+        if (argc == 1) {
+            printf("* lsipp:      Least square image file of P-P wave.\n");
+            return 0;
+        } else {
+            if (!sjmgets("lsipp", ptr->lsippfile)) {
+                printf("ERROR: Should set lsipp file!\n");
                 exit(0);
             }
 

@@ -32,25 +32,25 @@ void sjfree3d(void ***p);
 void sjcheckfree3d(void ***p);
 
 //! Fast allocate the 1 demension using macro
-#define sjmilloc1d(p, n1) (int *)sjalloc1d(n1, sizeof(int))
-#define sjmflloc1d(p, n1) (float *)sjalloc1d(n1, sizeof(float))
-#define sjmdlloc1d(p, n1) (double *)sjalloc1d(n1, sizeof(double))
-#define sjmclloc1d(p, n1) (fcomplex *)sjalloc1d(n1, sizeof(fcomplex))
-#define sjmzlloc1d(p, n1) (dcomplex *)sjalloc1d(n1, sizeof(dcomplex))
+#define sjmilloc1d(n1) (int *)sjalloc1d(n1, sizeof(int))
+#define sjmflloc1d(n1) (float *)sjalloc1d(n1, sizeof(float))
+#define sjmdlloc1d(n1) (double *)sjalloc1d(n1, sizeof(double))
+#define sjmclloc1d(n1) (fcomplex *)sjalloc1d(n1, sizeof(fcomplex))
+#define sjmzlloc1d(n1) (dcomplex *)sjalloc1d(n1, sizeof(dcomplex))
 
 //! Fast allocate the 2 demension using macro
-#define sjmilloc2d(p, n2, n1) (int **)sjalloc2d(n2, n1,  sizeof(int))
-#define sjmflloc2d(p, n2, n1) (float **)sjalloc2d(n2, n1, sizeof(float))
-#define sjmdlloc2d(p, n2, n1) (double **)sjalloc2d(n2, n1, sizeof(double))
-#define sjmclloc2d(p, n2, n1) (fcomplex **)sjalloc2d(n2, n1, sizeof(fcomplex))
-#define sjmzlloc2d(p, n2, n1) (dcomplex **)sjalloc2d(n2, n1, sizeof(dcomplex))
+#define sjmilloc2d(n2, n1) (int **)sjalloc2d(n2, n1,  sizeof(int))
+#define sjmflloc2d(n2, n1) (float **)sjalloc2d(n2, n1, sizeof(float))
+#define sjmdlloc2d(n2, n1) (double **)sjalloc2d(n2, n1, sizeof(double))
+#define sjmclloc2d(n2, n1) (fcomplex **)sjalloc2d(n2, n1, sizeof(fcomplex))
+#define sjmzlloc2d(n2, n1) (dcomplex **)sjalloc2d(n2, n1, sizeof(dcomplex))
 
 //! Fast allocate the 3 demension using macro
-#define sjmilloc3d(p, n3, n2, n1) (int ***)sjalloc3d(n3, n2, n1, sizeof(int))
-#define sjmflloc3d(p, n3, n2, n1) (float ***)sjalloc3d(n3, n2, n1, sizeof(float))
-#define sjmdlloc3d(p, n3, n2, n1) (double ***)sjalloc3d(n3, n2, n1, sizeof(double))
-#define sjmclloc3d(p, n3, n2, n1) (fcomplex ***)sjalloc3d(n3, n2, n1, sizeof(fcomplex))
-#define sjmzlloc3d(p, n3, n2, n1) (dcomplex ***)sjalloc3d(n3, n2, n1, sizeof(dcomplex))
+#define sjmilloc3d(n3, n2, n1) (int ***)sjalloc3d(n3, n2, n1, sizeof(int))
+#define sjmflloc3d(n3, n2, n1) (float ***)sjalloc3d(n3, n2, n1, sizeof(float))
+#define sjmdlloc3d(n3, n2, n1) (double ***)sjalloc3d(n3, n2, n1, sizeof(double))
+#define sjmclloc3d(n3, n2, n1) (fcomplex ***)sjalloc3d(n3, n2, n1, sizeof(fcomplex))
+#define sjmzlloc3d(n3, n2, n1) (dcomplex ***)sjalloc3d(n3, n2, n1, sizeof(dcomplex))
 
 //! Fast free the 1 demension using macro
 #define sjmfree1d(p) sjfree1d((void *) p)

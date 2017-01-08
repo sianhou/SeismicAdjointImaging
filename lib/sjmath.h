@@ -2,21 +2,21 @@
 // Created by hsa on 07/12/16.
 //
 
-#ifndef GJI_SJTOOL_H
-#define GJI_SJTOOL_H
+#ifndef GJI_SJMATH_H
+#define GJI_SJMATH_H
 
 #include "sjinc.h"
 
-int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp);
+void sjvecaddf(float *z, int n, float a, float *x, float b, float *y); //! c = a + b
 
-void sjextend2d(float **input, int nx, int nz, int ex0, int ex1, int ez0, int ez1, float **output);
+void sjvecsubf(float *z, int n, float a, float *x, float b, float *y); //! c = a - b
 
-void sjextract2d(float **input, int x0, int z0, int nx, int nz, float **output);
+//! z[] = a * x[] * y[]
+void sjvecmulf(float *z, int n, float a, float *y, float *x);
 
-void sjprojaddeq2d(float **input0, float **input1, int x0, int z0, int nx, int nz);
+void sjvecdivf(float *z, int n, float a, float *x, float *y, float ep); //! c = a / (b + ep)
 
-void sjprojdiveq2d(float **input0, float **input1, int x0, int z0, int nx, int nz);
+//! Z[] = 0.0f
+void sjveczerof(float *z, int n);
 
-void sjlaplcefilter2d(float **input, int n2, int n1);
-
-#endif //GJI_SJTOOL_H
+#endif //GJI_SJMATH_H

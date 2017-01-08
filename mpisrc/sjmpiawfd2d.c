@@ -18,25 +18,25 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rankid);
     MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 
-    //! Source
-    sjssource source;
-    flag &= sjssource_init(&source);
-    flag &= sjssource_getparas(&source, argc, argv);
-
     //! Survey
-    sjssurvey survey;
-    flag &= sjssurvey_init(&survey);
-    flag &= sjssurvey_getparas(&survey, argc, argv);
+    sjssurvey sur;
+    flag &= sjssurvey_init(&sur);
+    flag &= sjssurvey_getparas(&sur, argc, argv);
 
-    //! Model
-    sjsgeo geo2d;
-    flag &= sjsgeo_init(&geo2d);
-    flag &= sjsgeo_getparas2d(&geo2d, argc, argv, "vp");
+    //! Geology
+    sjsgeology geo;
+    flag &= sjsgeo_init(&geo);
+    flag &= sjsgeo_getparas2d(&geo, argc, argv, "vp");
 
-    //! Wave
-    sjswave wave2d;
-    flag &= sjswave_init(&wave2d);
-    flag &= sjswave_getparas(&wave2d, argc, argv, "recz");
+    //! Wavefield
+    sjswave wav;
+    flag &= sjswave_init(&wav);
+    flag &= sjswave_getparas(&wav, argc, argv, "recz");
+
+    //! Option
+    sjsoption opt;
+    flag &= sjsoption_init(&opt);
+    flag &= sjsoption_getparas(&opt, argc, argv);
 
     if (flag) {
         //! Time
@@ -45,68 +45,63 @@ int main(int argc, char *argv[]) {
             printf("------------------------ 2D Acoustic simulation start  ------------------------\n");
         }
 
-        //! Source
-        source.wavelet = (float *) sjalloc1d(source.srctrunc, sizeof(float));
-        sjricker1d(source.wavelet, source.srctrunc, source.k1, source.dt, source.fp, source.amp);
-
         //! Model
-        geo2d.gvp2d = (float **) sjalloc2d(survey.gnx, survey.gnz, sizeof(float));
-
-        sjreadsuall(geo2d.gvp2d[0], survey.gnx, survey.gnz, geo2d.vpfile);
+        geo.gvp2d = (float **) sjalloc2d(sur.gnx, sur.gnz, sizeof(float));
+        sjreadsuall(geo.gvp2d[0], sur.gnx, sur.gnz, geo.vpfile);
 
         //! Simulation
-        for (is = rankid; is < survey.ns; is += nrank) {
+        for (is = rankid; is < sur.ns; is += nrank) {
             //! Time
             tstart = (double) clock();
 
             //! Survey
-            sjssurvey_readis(&survey, is);
+            sjssurvey_readis(&sur, is);
 
             //! Model
-            geo2d.vp2d = (float **) sjalloc2d(survey.nx, survey.nz, sizeof(float));
-            sjextract2d(geo2d.gvp2d, survey.x0, survey.z0, survey.nx, survey.nz, geo2d.vp2d);
+            geo.vp2d = (float **) sjalloc2d(sur.nx, sur.nz, sizeof(float));
+            sjextract2d(geo.gvp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.vp2d);
 
             //! Wavefield
-            wave2d.recz = (float **) sjalloc2d(survey.nr, wave2d.nt, sizeof(float));
-            wave2d.snapz2d = (float ***) sjalloc3d(wave2d.nsnap, survey.nx, survey.nz, sizeof(float));
+            wav.recz = (float **) sjalloc2d(sur.nr, opt.nt, sizeof(float));
+            wav.snapz2d = (float ***) sjalloc3d(opt.nsnap, sur.nx, sur.nz, sizeof(float));
 
             //! Simulation
-            sjawfd2d(&source, &survey, &geo2d, &wave2d);
+            sjawfd2d(&sur, &geo, &wav, &opt);
 
             //! Output
             if (rankid == 0) {
-                sjwritesu(wave2d.recz[0], survey.nr, wave2d.nt, sizeof(float), source.dt, is, wave2d.reczfile);
+                sjwritesu(wav.recz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is, wav.reczfile);
                 tend = (double) clock();
-                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, survey.ns,
+                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                        (tend - tstart) / CLOCKS_PER_SEC);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
-                       survey.sx + survey.x0, survey.sz + survey.z0,
-                       survey.rx[0] + survey.x0, survey.rx[survey.nr - 1] + survey.x0,
-                       survey.rz[0] + survey.z0, survey.rz[survey.nr - 1] + survey.z0);
+                       sur.sx + sur.x0, sur.sz + sur.z0,
+                       sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
+                       sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
 
                 for (mpiid = 1; mpiid < nrank; mpiid++) {
-                    if ((is + mpiid) < survey.ns) {
-                        MPI_Recv(wave2d.recz[0], survey.nr * wave2d.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
+                    if ((is + mpiid) < sur.ns) {
+                        MPI_Recv(wav.recz[0], sur.nr * opt.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
-                        sjwritesu(wave2d.recz[0], survey.nr, wave2d.nt, sizeof(float), source.dt, is + mpiid,
-                                  wave2d.reczfile);
+                        sjwritesu(wav.recz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid,
+                                  wav.reczfile);
                     }
                 }
             } else {
-                MPI_Send(wave2d.recz[0], survey.nr * wave2d.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
+                MPI_Send(wav.recz[0], sur.nr * opt.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
                 tend = (double) clock();
-                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, survey.ns,
+                printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                        (tend - tstart) / CLOCKS_PER_SEC);
                 printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
-                       survey.sx + survey.x0, survey.sz + survey.z0,
-                       survey.rx[0] + survey.x0, survey.rx[survey.nr - 1] + survey.x0,
-                       survey.rz[0] + survey.z0, survey.rz[survey.nr - 1] + survey.z0);
+                       sur.sx + sur.x0, sur.sz + sur.z0,
+                       sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
+                       sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
             }
 
             //! Free
-            sjcheckfree2d((void **) geo2d.vp2d);
-            sjcheckfree2d((void **) wave2d.recz);
-            sjcheckfree3d((void ***) wave2d.snapz2d);
+            sjcheckfree2d((void **) geo.vp2d);
+            sjcheckfree2d((void **) wav.recz);
+            sjcheckfree3d((void ***) wav.snapz2d);
         }
 
         //------------------------ Information ------------------------//
@@ -116,7 +111,7 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        printf("\nExamples:   sjmpiawfd2d survey=survey.su vp=vp.su recz=recz.su nt=3001\n");
+        printf("\nExamples:   sjmpiawfd2d sur=sur.su vp=vp.su recz=recz.su nt=3001\n");
         sjbasicinformation();
     }
 

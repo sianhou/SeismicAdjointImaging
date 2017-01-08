@@ -7,33 +7,31 @@ file(MAKE_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/bin)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${SeismicAdjointImaging_BINARY_DIR}/bin)
 
-#--------------------------------------------------------------------------------------------------
-# OpenMP
-#--------------------------------------------------------------------------------------------------
-add_definitions("-O3")
+set(CMAKE_CXX_COMPILER "/opt/intel/compilers_and_libraries_2017.1.132/linux/bin/intel64/icpc")
+set(CMAKE_C_COMPILER "/opt/intel/compilers_and_libraries_2017.1.132/linux/bin/intel64/icc")
 
 #! Library
 set(SJINC lib/sjinc.h)
-set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjsimulation.c)
+set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjwave.c lib/sjwave.h)
 add_library(sj ${SJLIB} ${SGLIB})
 
 #! RUNTIME
 find_library(sj ${SeismicAdjointImaging_BINARY_DIR}/lib)
 
-#! Test
-set(TEST_ASGFD test/test_asgfd.c)
-add_executable(test_asgfd ${TEST_ASGFD} ${SJINC})
-target_link_libraries(test_asgfd sj m)
+#! test
+set(SOURCEFILE test/testsj.c)
+add_executable(testsj ${SOURCEFILE} ${SJINC})
+target_link_libraries(testsj sj m)
 
-#! sgbin2su
+#! sjbin2su
 set(SOURCEFILE src/sjbin2su.c)
 add_executable(sjbin2su ${SOURCEFILE} ${SJINC})
 target_link_libraries(sjbin2su sj m)
-#! sgdisplaysurvey2d
+#! sjdisplaysurvey2d
 set(SOURCEFILE src/sjdisplaysurvey2d.c)
 add_executable(sjdisplaysurvey2d ${SOURCEFILE} ${SJINC})
 target_link_libraries(sjdisplaysurvey2d sj m)
-#! sgsurvey2d
+#! sjsurvey2d
 set(SOURCEFILE src/sjsurvey2d.c)
 add_executable(sjsurvey2d ${SOURCEFILE} ${SJINC})
 target_link_libraries(sjsurvey2d sj m)
@@ -41,23 +39,19 @@ target_link_libraries(sjsurvey2d sj m)
 #--------------------------------------------------------------------------------------------------
 # MPI
 #--------------------------------------------------------------------------------------------------
-set(CMAKE_CXX_COMPILER "mpicxx")
-set(CMAKE_C_COMPILER "mpicc")
+
+set(CMAKE_CXX_COMPILER "/opt/intel/compilers_and_libraries_2017.1.132/linux/mpi/intel64/bin/mpiicpc")
+set(CMAKE_C_COMPILER "/opt/intel/compilers_and_libraries_2017.1.132/linux/mpi/intel64/bin/mpiicc")
 
 find_package ( MPI )
 if ( MPI_FOUND )
     #! Library
     set(SJINC lib/sjinc.h)
-    set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjsimulation.c)
+    set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjwave.c lib/sjwave.h)
     add_library(mpisj ${SJINC} ${SJLIB})
 
     #! RUNTIME
     find_library(mpisj ${SeismicAdjointImaging_BINARY_DIR}/lib)
-
-    #! sgmpiawsgfd2d
-    set(SOURCEFILE mpisrc/sjmpiawsgfd2d.c)
-    add_executable(sjmpiawsgfd2d ${SOURCEFILE} ${SJINC})
-    target_link_libraries(sjmpiawsgfd2d mpisj m)
 
     #! sgmpiawfd2d
     set(SOURCEFILE mpisrc/sjmpiawfd2d.c)

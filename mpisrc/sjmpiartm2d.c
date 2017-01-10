@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
             sjawrtmfd2d(&sur, &geo, &wav, &opt);
 
             //! Laplace filter
-            sjfilter2d(geo.ipp2d, sur.nx, sur.nz, "laplace");
+            sjfilter2dx(geo.ipp2d, sur.nx, sur.nz, "laplace");
 
             //! Stacking
             sjvecaddf(&geo.gipp2d[sur.x0][sur.z0], sur.nx * sur.nz, 1.0f, &geo.gipp2d[sur.x0][sur.z0], 1.0f, &geo.ipp2d[0][0]);
@@ -114,7 +114,7 @@ int main(int argc, char *argv[]) {
             sjvecdivf(geo.gipp2d[0], sur.gnx * sur.gnz, 1.0, geo.gipp2d[0], nmig[0], 0.00001f);
 
             //! Cut surface
-            sjsetsurface(geo.gipp2d, sur.gnx, 30, 0.0f);
+            sjsetsurface(geo.gipp2d, sur.gnx, 15, 0.0f);
 
             //! Output
             sjwritesuall(geo.gipp2d[0], sur.gnx, sur.gnz, opt.ds, geo.ippfile);

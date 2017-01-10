@@ -633,7 +633,7 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
         printf("                               1: stacking (default);\n");
         printf("  dt:          Interval of time(s), default = 0.001.\n");
         printf("  fp:          Peak frequency of wavelet, default = 20.\n");
-        printf("  amp:         Peak amplitude of wavelet, default = 10.0.\n");
+        printf("  amp:         Peak amplitude of wavelet, default = 1.0.\n");
         printf("  srcdecay:    Decay of source, default = 0.4.\n");
         printf("  nb:          Range of ABC, default = 15.\n");
         printf("  ds:          Interval of space(m), default = 10.0.\n");
@@ -655,7 +655,7 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
         if (!sjmgeti("ystacksrc", ptr->ystacksrc)) ptr->ystacksrc = 1;
         if (!sjmgetf("dt", ptr->dt)) ptr->dt = 0.001;
         if (!sjmgetf("fp", ptr->fp)) ptr->fp = 20.0;
-        if (!sjmgetf("amp", ptr->amp)) ptr->amp = 10.0;
+        if (!sjmgetf("amp", ptr->amp)) ptr->amp = 1.0;
         if (!sjmgetf("srcdecay", ptr->srcdecay)) ptr->srcdecay = 0.4;
         if (!sjmgeti("nb", ptr->nb)) ptr->nb = 15;
         if (!sjmgetf("ds", ptr->ds)) ptr->ds = 10.0;

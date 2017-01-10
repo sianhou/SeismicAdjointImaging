@@ -9,12 +9,11 @@
 
 int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp);
 
-void sjextend2d(float **input, int nx, int nz,
-                int ex0, int ex1, int ez0, int ez1, float **output);
+void sjextend2d(float **z, int nx, int nz, int ex0, int ex1, int ez0, int ez1, float **x);
 
 void sjextract2d(float **input, int x0, int z0, int nx, int nz, float **output);
 
-void sjfilter2d(float **a, int n2, int n1, char *mode);
+void sjfilter2dx(float **a, int n2, int n1, char *mode);
 
 void sjsetsurface(float **a, int n2, int n1, float val);
 

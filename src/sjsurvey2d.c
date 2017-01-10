@@ -80,7 +80,7 @@ int main(int argc, char *argv[]) {
         exit(0);
     };
     if (!sjmgeti("sz0", sz0)) {
-        printf("ERROR: Should set sxz in program sjsurvey2d!\n");
+        printf("ERROR: Should set sz0 in program sjsurvey2d!\n");
         exit(0);
     };
 
@@ -133,7 +133,7 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
         //! Source
-        if ((sx0 + is*dsx) < x0 || (sx0 + is*dsx) > (x0 + nx - 1)) {
+        if ((sx0 + is*dsx) < 0 || (sx0 + is*dsx) > (nx - 1)) {
             printf("ERROR: The sx exceed the local model!\n");
             exit(0);
         }
@@ -142,11 +142,11 @@ int main(int argc, char *argv[]) {
             exit(0);
         }
         //! Receiver
-        if (rx0 < x0 || rx0 > (x0 + nx - 1)) {
+        if (rx0 < 0 || rx0 > (nx - 1)) {
             printf("ERROR: The rx exceed the local model!\n");
             exit(0);
         }
-        if ((x0 + rx0 + (nr-1) * drx) < x0 || (x0 + rx0 + (nr-1) * drx) > (x0 + nx - 1)) {
+        if ((rx0 + (nr-1) * drx) < 0 || (rx0 + (nr-1) * drx) > (nx - 1)) {
             printf("ERROR: The rx exceed the local model!\n");
             exit(0);
         }
@@ -175,7 +175,7 @@ int main(int argc, char *argv[]) {
         survey.z0 = 0;
         //! sy,sx,sz
         survey.sy = 0;
-        survey.sx = x0 + sx0 + is*dsx;
+        survey.sx = sx0 + is*dsx;
         survey.sz = sz0;
         //! yl,xl,zl
         survey.ny = 1;
@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
         //! receiver
         for (ir = 0; ir < nr; ++ir) {
             survey.ry[ir] = 0;
-            survey.rx[ir] = x0 + rx0 + ir * drx;
+            survey.rx[ir] = rx0 + ir * drx;
             survey.rz[ir] = rz0 + ir * drz;
         }
         //! Output

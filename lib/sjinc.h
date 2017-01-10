@@ -579,6 +579,8 @@ typedef struct {
 
     int ycutdirect;
     int ycalscatter;
+
+    int niter;
 } sjsoption;
 
 #include "sjabc.h"

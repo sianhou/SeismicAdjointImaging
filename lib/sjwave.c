@@ -3,7 +3,6 @@
 //
 
 #include "sjwave.h"
-#include "sjinc.h"
 
 int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
 
@@ -21,34 +20,33 @@ int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
     return 1;
 }
 
-void sjextend2d(float **input, int nx, int nz,
-                int ex0, int ex1, int ez0, int ez1, float **output) {
+void sjextend2d(float **z, int nx, int nz, int ex0, int ex1, int ez0, int ez1, float **x) {
     int ix, iz;
 
     //! Centering
     for (ix = 0; ix < nx; ++ix)
         for (iz = 0; iz < nz; ++iz)
-            output[ix + ex0][iz + ez0] = input[ix][iz];
+            z[ix + ex0][iz + ez0] = x[ix][iz];
 
     //! Left
     for (ix = 0; ix < ex0; ++ix)
         for (iz = 0; iz < nz; ++iz)
-            output[ix][iz + ez0] = input[0][iz];
+            z[ix][iz + ez0] = x[0][iz];
 
     //! Right
     for (ix = 0; ix < ex1; ++ix)
         for (iz = 0; iz < nz; ++iz)
-            output[ex0 + nx + ix][iz + ez0] = input[nx - 1][iz];
+            z[ex0 + nx + ix][iz + ez0] = x[nx - 1][iz];
 
     //! Upper
     for (ix = 0; ix < ex0 + nx + ex1; ++ix)
         for (iz = 0; iz < ez0; ++iz)
-            output[ix][iz] = output[ix][ez0];
+            z[ix][iz] = z[ix][ez0];
 
     //! Below
     for (ix = 0; ix < ex0 + nx + ex1; ++ix)
         for (iz = 0; iz < ez1; ++iz)
-            output[ix][ez0 + nz + iz] = output[ix][ez0 + nz - 1];
+            z[ix][ez0 + nz + iz] = z[ix][ez0 + nz - 1];
 }
 
 void sjextract2d(float **input, int x0, int z0, int nx, int nz, float **output) {
@@ -58,7 +56,7 @@ void sjextract2d(float **input, int x0, int z0, int nx, int nz, float **output) 
             output[ix][iz] = input[x0 + ix][z0 + iz];
 }
 
-void sjfilter2d(float **a, int n2, int n1, char *mode) {
+void sjfilter2dx(float **a, int n2, int n1, char *mode) {
     int ix, iz;
     if (strcmp(mode, "laplace") == 0) {
         float **p = (float **) sjalloc2d(n2, n1, sizeof(float));
@@ -180,7 +178,7 @@ void sjawfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
     int nzb = nz + 2 * marg + 2 * nb;
     float ids2 = 1.0f / ds / ds;
     float **cp = sjmflloc2d(nxb, nzb);
-    sjextend2d(geo->vp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, cp);
+    sjextend2d(cp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vp2d);
 
     //------------------------ Boundary condition ------------------------//
     float **gxl = sjmflloc2d(nzb, 8);
@@ -338,8 +336,8 @@ void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
     float ids2 = 1.0f / ds / ds;
     float **cp = sjmflloc2d(nxb, nzb);
     float **ipp = sjmflloc2d(nxb, nzb);
-    sjextend2d(geo->vp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, cp);
-    sjextend2d(geo->ipp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, ipp);
+    sjextend2d(cp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vp2d);
+    sjextend2d(ipp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->ipp2d);
 
     //------------------------ Boundary condition ------------------------//
     float **gxl = sjmflloc2d(nzb, 8);
@@ -409,7 +407,8 @@ void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         if ((it % jsnap) == 0)
             for (ix = nb + marg; ix < nxb - nb - marg; ix++)
                 for (iz = nb + marg; iz < nzb - nb - marg; iz++)
-                    wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
+                    wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] =
+                            (p2[ix][iz] - 2.0 * p1[ix][iz] + p0[ix][iz]) / dt2;
 
         //! Update
         memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
@@ -464,7 +463,7 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
     int nzb = nz + 2 * marg + 2 * nb;
     float ids2 = 1.0f / ds / ds;
     float **cp = sjmflloc2d(nxb, nzb);
-    sjextend2d(geo->vp2d, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, cp);
+    sjextend2d(cp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vp2d);
 
     //------------------------ Boundary condition ------------------------//
     float **gxl = sjmflloc2d(nzb, 8);
@@ -526,6 +525,9 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         memcpy(p1[0], p0[0], nxb * nzb * sizeof(float));
     }
 
+    sjsetsurface(geo->ipp2d,nx,20,0.0);
+    sjsetsurface(geo->nipp2d,nx,20,0.0);
+
     sjmfree2d(cp);
 
     sjmfree2d(gxl);
@@ -537,4 +539,3 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
     sjmfree2d(p1);
     sjmfree2d(p2);
 }
-

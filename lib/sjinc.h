@@ -566,6 +566,7 @@ typedef struct {
 typedef struct {
     float **recy, **recx, **recz;
     float ***snapy2d, ***snapx2d, ***snapz2d;
+    float ***bwz2d;
     char *recyfile, *recxfile, *reczfile;
 } sjswave;
 
@@ -579,6 +580,8 @@ typedef struct {
 
     int ycutdirect;
     int ycalscatter;
+
+    int rtmopt;
 
     int niter;
 } sjsoption;

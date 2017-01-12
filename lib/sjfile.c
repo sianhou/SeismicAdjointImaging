@@ -3,6 +3,7 @@
 //
 
 #include "sjfile.h"
+#include "sjinc.h"
 
 //! Show information
 void sjbasicinformation() {
@@ -599,6 +600,8 @@ int sjsoption_init(sjsoption *ptr) {
     ptr->ds = -1.0f;
     ptr->ycutdirect = -1;
     ptr->ycalscatter = -1;
+
+    ptr->rtmopt = 1; //! Normal image, 2 = keep wavefield
     return 1;
 }
 

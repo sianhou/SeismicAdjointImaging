@@ -3,6 +3,7 @@
 //
 
 #include "sjwave.h"
+#include "sjinc.h"
 
 int sjricker1d(float *ricker, int nt, int t0, float dt, float fp, float amp) {
 
@@ -529,14 +530,20 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
 
         //! Wavefield
         if ((it % jsnap) == 0) {
-            for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
-                for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
-                    geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
-                            wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
-                    geo->nipp2d[ix - nb - marg][iz - nb - marg] +=
-                            wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
-                            wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
+            if (opt->rtmopt == 1) {
+                for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
+                    for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
+                        geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
+                                wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
+                        geo->nipp2d[ix - nb - marg][iz - nb - marg] +=
+                                wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
+                                wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
+                    }
                 }
+            } else if (opt->rtmopt == 2) {
+                for (ix = nb + marg; ix < nxb - nb - marg; ix++)
+                    for (iz = nb + marg; iz < nzb - nb - marg; iz++)
+                        wav->bwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
             }
         }
 

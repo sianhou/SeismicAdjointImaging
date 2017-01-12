@@ -49,11 +49,11 @@ void sjextend2d(float **z, int nx, int nz, int ex0, int ex1, int ez0, int ez1, f
             z[ix][ez0 + nz + iz] = z[ix][ez0 + nz - 1];
 }
 
-void sjextract2d(float **input, int x0, int z0, int nx, int nz, float **output) {
+void sjextract2d(float **z, int x0, int z0, int nx, int nz, float **x) {
     int ix, iz;
     for (ix = 0; ix < nx; ++ix)
         for (iz = 0; iz < nz; ++iz)
-            output[ix][iz] = input[x0 + ix][z0 + iz];
+            z[ix][iz] = x[x0 + ix][z0 + iz];
 }
 
 void sjfilter2dx(float **a, int n2, int n1, char *mode) {
@@ -212,9 +212,8 @@ void sjawfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         //! Calculate veloctiy
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                p2[ix][iz] =
-                        cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2 + 2.0f * p1[ix][iz] -
-                        p0[ix][iz];
+                p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2
+                             + 2.0f * p1[ix][iz] - p0[ix][iz];
 
         //! Boundary condition
         sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
@@ -267,9 +266,8 @@ void sjawfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
             //! Calculate veloctiy
             for (ix = marg; ix < nxb - marg; ix++)
                 for (iz = marg; iz < nzb - marg; iz++)
-                    p2[ix][iz] =
-                            cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2 + 2.0f * p1[ix][iz] -
-                            p0[ix][iz];
+                    p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2
+                                 + 2.0f * p1[ix][iz] - p0[ix][iz];
 
             //! Boundary condition
             sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
@@ -377,6 +375,27 @@ void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         //! Laplace operator
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
+                p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2
+                             + 2.0f * p1[ix][iz] - p0[ix][iz];
+
+        //! Scatter source
+        //for (ix = marg; ix < nxb - marg; ix++)
+        //for (iz = marg; iz < nzb - marg; iz++)
+        //s1[ix][iz] += p1[ix][iz] * ipp[ix][iz];
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++)
+                s1[ix][iz] += (p2[ix][iz] - 2.0f * p1[ix][iz] + p0[ix][iz]) / dt2 * ipp[ix][iz];
+
+        //! Scatter wavefield
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++)
+                s2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(s1, ix, iz) + sjmfd2dn2(s1, ix, iz)) * dt2
+                             + 2.0f * s1[ix][iz] - s0[ix][iz];
+
+        /*
+        //! Laplace operator
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++)
                 p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz));
 
         //! Scatter source
@@ -394,6 +413,7 @@ void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
                 p2[ix][iz] = p2[ix][iz] * dt2 + 2.0f * p1[ix][iz] - p0[ix][iz];
+        */
 
         //! Boundary condition
         sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
@@ -407,6 +427,7 @@ void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         if ((it % jsnap) == 0)
             for (ix = nb + marg; ix < nxb - nb - marg; ix++)
                 for (iz = nb + marg; iz < nzb - nb - marg; iz++)
+                    //wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
                     wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] =
                             (p2[ix][iz] - 2.0 * p1[ix][iz] + p0[ix][iz]) / dt2;
 
@@ -500,9 +521,8 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         //! Calculate velocity
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++)
-                p0[ix][iz] =
-                        cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2 + 2.0f * p1[ix][iz] -
-                        p2[ix][iz];
+                p0[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz)) * dt2
+                             + 2.0f * p1[ix][iz] - p2[ix][iz];
 
         //! Boundary condition
         sjapplythabc2d(p0, p1, p2, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
@@ -524,9 +544,6 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         memcpy(p2[0], p1[0], nxb * nzb * sizeof(float));
         memcpy(p1[0], p0[0], nxb * nzb * sizeof(float));
     }
-
-    sjsetsurface(geo->ipp2d,nx,20,0.0);
-    sjsetsurface(geo->nipp2d,nx,20,0.0);
 
     sjmfree2d(cp);
 

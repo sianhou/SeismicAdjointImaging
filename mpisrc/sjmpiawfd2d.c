@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 
             //! Model
             geo.vp2d = (float **) sjalloc2d(sur.nx, sur.nz, sizeof(float));
-            sjextract2d(geo.gvp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.vp2d);
+            sjextract2d(geo.vp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.gvp2d);
 
             //! Wavefield
             wav.recz = (float **) sjalloc2d(sur.nr, opt.nt, sizeof(float));

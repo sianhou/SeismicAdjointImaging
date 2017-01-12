@@ -6,7 +6,7 @@
 #include <mpi.h>
 
 //! Two dimension constant density acoustic LSRTM gradient
-void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt, float **grad);
+void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt, float **grad, float *err);
 
 int main(int argc, char *argv[]) {
 
@@ -48,63 +48,63 @@ int main(int argc, char *argv[]) {
             Tstart = (double) clock();
             printf("------------------------ 2D Acoustic LSRTM start ------------------------\n");
         }
-
-        //! Allocate memory
+        //! Set model
         geo.gvp2d = sjmflloc2d(sur.gnx, sur.gnz);
         geo.gipp2d = sjmflloc2d(sur.gnx, sur.gnz);
-
-        //! Set model
         sjreadsuall(geo.gvp2d[0], sur.gnx, sur.gnz, geo.vpfile);
         memset(geo.gipp2d[0], 0, sur.gnx * sur.gnz * sizeof(float));
+
+        opt.niter = 60;
 
         //! Process migration
         float **g0 = sjmflloc2d(sur.gnx, sur.gnz);
         float **g1 = sjmflloc2d(sur.gnx, sur.gnz);
-        float **dr = sjmflloc2d(sur.gnx, sur.gnz);
+        float **cg = sjmflloc2d(sur.gnx, sur.gnz);
+        float *err = sjmflloc1d(opt.niter);
 
-        opt.niter = 10;
-        for (iter = 0; iter < opt.niter; ++iter) {
+        //! Inversion
+        do {
             //! Calculate gradient
-            sjlsartmgrad2d(&sur, &geo, &wav, &opt, g1);
-            if (rankid == 0) {
-                sjwritesu(g1[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter, "g1.su");
+            if (iter == 0) {
+                opt.ystacksrc = 0;
+                sjlsartmgrad2d(&sur, &geo, &wav, &opt, g1, err + iter);
+            } else {
+                opt.ystacksrc = 1;
+                sjlsartmgrad2d(&sur, &geo, &wav, &opt, g1, err + iter);
             }
 
+            //! Optimization
             if (rankid == 0) {
-                //! Calculate direction
-                sjcgdirection(dr[0], sur.gnx * sur.gnz, g1[0], g0[0], iter);
-                sjwritesu(dr[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter, "dr.su");
+                //! CG
+                sjcgsolver(geo.gipp2d[0], sur.gnx * sur.gnz, cg[0], g1[0], g0[0], iter);
 
-                //! Calculate stepsize
-                float lambda;
-                lambda = sjcgstepsize(sur.gnx * sur.gnz, dr[0], geo.gipp2d[0], 0.1, iter);
-                printf("\nlambda_%d = %g\n", iter,lambda);
-
-                //! Update model
-                sjvecaddf(geo.gipp2d[0], sur.gnx * sur.gnz, 1.0f, geo.gipp2d[0], lambda, dr[0]);
-                sjwritesu(geo.gipp2d[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter, "lsipp.su");
+                char *file = (char *) malloc(1024 * sizeof(char));
+                sprintf(file, "g1-%d.su", iter);
+                sjwritesuall(g1[0], sur.gnx, sur.gnz, opt.ds, file);
+                sprintf(file, "cg-%d.su", iter);
+                sjwritesuall(cg[0], sur.gnx, sur.gnz, opt.ds, file);
+                sprintf(file, "li-%d.su", iter);
+                sjwritesuall(geo.gipp2d[0], sur.gnx, sur.gnz, opt.ds, file);
 
                 //! Information
                 Tend = (double) clock();
-                printf("Acoustic LSRTM complete - %2d/%2d - time=%fs.\n", iter + 1, opt.niter,
-                       (Tend - Tstart) / CLOCKS_PER_SEC);
+                printf("Acoustic LSRTM complete - %2d/%2d - residual=%e - time=%6.2fs.\n",
+                       iter + 1, opt.niter, err[iter], (Tend - Tstart) / CLOCKS_PER_SEC);
             }
-            if (rankid ==0) {
-                //! Laplace
-                sjfilter2dx(geo.gipp2d, sur.gnx, sur.gnz, "laplace");
-                //! Output
-                sjwritesuall(geo.gipp2d[0], sur.gnx, sur.gnz, opt.ds, geo.ippfile);
-            }
-        }
+
+            iter += 1;
+
+        } while (iter < opt.niter);
+
         if (rankid == 0) {
             printf("Acoustic LSRTM completed.\n\n");
         }
 
         sjmfree2d(geo.gvp2d);
         sjmfree2d(geo.gipp2d);
-        sjmfree2d(g0);
+        sjmfree2d(cg);
         sjmfree2d(g1);
-        sjmfree2d(dr);
+        sjmfree2d(g0);
     } else {
         if (rankid == 0) {
             printf("\nExamples:   sjmpilsartm2d sur=sur.su vp=vp.su recz=recz.su ipp=lsipp.su\n");
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
 }
 
 //! Two dimension constant density acoustic LSRTM gradient
-void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt, float **grad) {
+void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt, float **grad, float *err) {
 
     //------------------------ Runtime ------------------------//
     int is = 0;
@@ -129,6 +129,7 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
     MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 
     //------------------------ Bcast model ------------------------//
+    *err = 0.0f;
     memset(grad[0], 0, sur->gnx * sur->gnz * sizeof(float));
     float **nmig = sjmflloc2d(sur->gnx, sur->gnz);
     MPI_Bcast(geo->gipp2d[0], sur->gnx * sur->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
@@ -155,8 +156,8 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
         sjssurvey_readis(sur, is);
 
         //! Set model
-        sjextract2d(geo->gvp2d, sur->x0, sur->z0, sur->nx, sur->nz, geo->vp2d);
-        sjextract2d(geo->gipp2d, sur->x0, sur->z0, sur->nx, sur->nz, geo->ipp2d);
+        sjextract2d(geo->vp2d, sur->x0, sur->z0, sur->nx, sur->nz, geo->gvp2d);
+        sjextract2d(geo->ipp2d, sur->x0, sur->z0, sur->nx, sur->nz, geo->gipp2d);
 
         //! Simulation
         sjreadsu(recz[0], sur->nr, opt->nt, sizeof(float), sur->tr, 0, wav->reczfile);
@@ -164,15 +165,15 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
 
         //! Difference wavefield
         sjvecsubf(wav->recz[0], sur->nr * opt->nt, 1.0f, wav->recz[0], 1.0f, recz[0]);
+        *err += sjvecdotf(sur->nr * opt->nt, 1.0f, wav->recz[0], wav->recz[0]);
 
         //! Adjoint image
-        opt->ystacksrc = 1;
         memset(geo->ipp2d[0], 0, sur->nx * sur->nz * sizeof(float));
         memset(geo->nipp2d[0], 0, sur->nx * sur->nz * sizeof(float));
         sjawrtmfd2d(sur, geo, wav, opt);
 
         //! Stacking
-        sjvecaddf(grad[sur->x0], sur->nx * sur->nz, 1.0f, grad[sur->x0], -1.0f, geo->ipp2d[0]);
+        sjvecaddf(grad[sur->x0], sur->nx * sur->nz, 1.0f, grad[sur->x0], 1.0f, geo->ipp2d[0]);
         sjvecaddf(nmig[sur->x0], sur->nx * sur->nz, 1.0f, nmig[sur->x0], 1.0f, geo->nipp2d[0]);
 
         //! Free
@@ -195,14 +196,15 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
 
     if (rankid == 0) {
         //! Communication
+        MPI_Reduce(MPI_IN_PLACE, err, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(MPI_IN_PLACE, grad[0], sur->gnx * sur->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(MPI_IN_PLACE, nmig[0], sur->gnx * sur->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
         //! Source
         sjvecdivf(grad[0], sur->gnx * sur->gnz, 1.0, grad[0], nmig[0], 0.00001f);
 
-        //! Cut surface
-        //sjsetsurface(grad, sur->gnx, 30, 0.0f);
+        //! Cut source
+        sjsetsurface(grad, sur->gnx, 30, 0.0);
 
         //! Information
         tend = (double) clock();
@@ -212,6 +214,7 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
         printf(" complete - %6.2fs.\n", (tend - tstart) / CLOCKS_PER_SEC);
     } else {
         //! Communication
+        MPI_Reduce(err, err, 1, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(grad[0], grad[0], sur->gnx * sur->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         MPI_Reduce(nmig[0], nmig[0], sur->gnx * sur->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     }

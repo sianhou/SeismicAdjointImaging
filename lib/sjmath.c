@@ -105,6 +105,7 @@ void sjveczerof(float *z, int n) {
 }
 
 void sjcgdirection(float *d, int n, float *g1, float *g0, int iter) {
+    //! by Guanchao wang
     int ii;
     float beta;
     if (iter == 0) {
@@ -120,13 +121,55 @@ void sjcgdirection(float *d, int n, float *g1, float *g0, int iter) {
     }
 }
 
-float sjcgstepsize(int n, float *s, float *x, float err, int iter) {
+float sjcglength(int n, float *s, float *x, float err, int iter) {
+    //! by Guanchao wang
     int index_s, index_x;
     if (iter == 0) {
         return 0.0001f;
     } else {
         index_s = sjfindabsmaxf(s, n);
         index_x = sjfindabsmaxf(x, n);
-        return err * fabs(x[index_x]) / fabs(s[index_s]);
+        return err * fabsf(x[index_x]) / fabsf(s[index_s]);
     }
+}
+
+float sjcgbeta(int n, float *cg, float *g1, float *g0, int iter) {
+    //! by Pengliang Yang
+    if (iter == 0) {
+        return 0.0f;
+    } else {
+        int ii;
+        float a, b, c;
+        a = b = c = 0;
+        for (ii = 0; ii < n; ++ii) {
+            a += g1[ii] * (g1[ii] - g0[ii]);
+            b += cg[ii] * (g1[ii] - g0[ii]);
+            c += g1[ii] * g1[ii];
+        }
+
+        float beta_HS = (fabsf(b) > 0.0f) ? (a / b) : 0.0f;
+        float beta_DY = (fabsf(b) > 0.0f) ? (c / b) : 0.0f;
+        return SJMMAX(0.0f, SJMMIN(beta_HS, beta_DY));
+    }
+}
+
+void sjcgsolver(float *z, int n, float *cg, float *g1, float *g0, int iter) {
+
+    float alpha, beta;
+
+    //! Calculate CG direction
+    if(iter==0) {
+        beta = 0.0f;
+        sjvecaddf(cg, n, -1.0f, g1, beta, cg);
+    } else {
+        beta = sjcgbeta(n, cg, g1, g0, iter);
+        sjvecaddf(cg, n, -1.0f, g1, beta, cg);
+    }
+    memcpy(g0, g1, n * sizeof(float));
+
+    //! Calculate CG step size
+    alpha = sjcglength(n, cg, z, 0.1, iter);
+
+    //! Update model
+    sjvecaddf(z, n, 1.0f, z, alpha, cg);
 }

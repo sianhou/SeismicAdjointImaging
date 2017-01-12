@@ -557,17 +557,17 @@ typedef struct {
 typedef struct {
     float **gvp2d, **gvs2d;
     float **vp2d, **vs2d;
-    float **ipp2d, **nipp2d;
-    float **gipp2d;
+    float **gipp2d, **gspp2d;
+    float **ipp2d, **spp2d;
     char *vpfile, *vsfile, *ippfile,*lsippfile;
 } sjsgeology;
 
 //! Wavefield
 typedef struct {
-    float **recy, **recx, **recz;
-    float ***snapy2d, ***snapx2d, ***snapz2d;
-    float ***bwz2d;
-    char *recyfile, *recxfile, *reczfile;
+    float **profy, **profx, **profz;
+    float ***fwy2d, ***fwx2d, ***fwz2d;
+    float ***bwy2d, ***bwx2d, ***bwz2d;
+    char *profyfile, *profxfile, *profzfile;
 } sjswave;
 
 //! Option

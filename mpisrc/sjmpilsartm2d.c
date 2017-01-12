@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     //! Wave
     sjswave wav;
     flag &= sjswave_init(&wav);
-    flag &= sjswave_getparas(&wav, argc, argv, "recz");
+    flag &= sjswave_getparas(&wav, argc, argv, "profz");
 
     //! Option
     sjsoption opt;
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
         sjmfree2d(g0);
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpilsartm2d sur=sur.su vp=vp.su recz=recz.su ipp=lsipp.su\n");
+            printf("\nExamples:   sjmpilsartm2d sur=sur.su vp=vp.su profz=profz.su ipp=lsipp.su\n");
             sjbasicinformation();
         }
     }
@@ -147,10 +147,10 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
         //! Memory
         geo->vp2d = sjmflloc2d(sur->nx, sur->nz);
         geo->ipp2d = sjmflloc2d(sur->nx, sur->nz);
-        geo->nipp2d = sjmflloc2d(sur->nx, sur->nz);
+        geo->spp2d = sjmflloc2d(sur->nx, sur->nz);
+        wav->profz = sjmflloc2d(sur->nr, opt->nt);
+        wav->fwz2d = sjmflloc3d(opt->nsnap, sur->nx, sur->nz);
         float **recz = sjmflloc2d(sur->nr, opt->nt);
-        wav->recz = sjmflloc2d(sur->nr, opt->nt);
-        wav->snapz2d = sjmflloc3d(opt->nsnap, sur->nx, sur->nz);
 
         //! Set survey
         sjssurvey_readis(sur, is);
@@ -160,29 +160,29 @@ void sjlsartmgrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *op
         sjextract2d(geo->ipp2d, sur->x0, sur->z0, sur->nx, sur->nz, geo->gipp2d);
 
         //! Simulation
-        sjreadsu(recz[0], sur->nr, opt->nt, sizeof(float), sur->tr, 0, wav->reczfile);
+        sjreadsu(recz[0], sur->nr, opt->nt, sizeof(float), sur->tr, 0, wav->profzfile);
         sjaswfd2d(sur, geo, wav, opt);
 
         //! Difference wavefield
-        sjvecsubf(wav->recz[0], sur->nr * opt->nt, 1.0f, wav->recz[0], 1.0f, recz[0]);
-        *err += sjvecdotf(sur->nr * opt->nt, 1.0f, wav->recz[0], wav->recz[0]);
+        sjvecsubf(wav->profz[0], sur->nr * opt->nt, 1.0f, wav->profz[0], 1.0f, recz[0]);
+        *err += sjvecdotf(sur->nr * opt->nt, 1.0f, wav->profz[0], wav->profz[0]);
 
         //! Adjoint image
         memset(geo->ipp2d[0], 0, sur->nx * sur->nz * sizeof(float));
-        memset(geo->nipp2d[0], 0, sur->nx * sur->nz * sizeof(float));
+        memset(geo->spp2d[0], 0, sur->nx * sur->nz * sizeof(float));
         sjawrtmfd2d(sur, geo, wav, opt);
 
         //! Stacking
         sjvecaddf(grad[sur->x0], sur->nx * sur->nz, 1.0f, grad[sur->x0], 1.0f, geo->ipp2d[0]);
-        sjvecaddf(nmig[sur->x0], sur->nx * sur->nz, 1.0f, nmig[sur->x0], 1.0f, geo->nipp2d[0]);
+        sjvecaddf(nmig[sur->x0], sur->nx * sur->nz, 1.0f, nmig[sur->x0], 1.0f, geo->spp2d[0]);
 
         //! Free
         sjmcheckfree2d(geo->vp2d);
         sjmcheckfree2d(geo->ipp2d);
-        sjmcheckfree2d(geo->nipp2d);
-        sjmcheckfree2d(wav->recz);
+        sjmcheckfree2d(geo->spp2d);
+        sjmcheckfree2d(wav->profz);
         sjmcheckfree2d(recz);
-        sjmcheckfree3d(wav->snapz2d);
+        sjmcheckfree3d(wav->fwz2d);
 
         //! Informaiton
         if (rankid == 0) {

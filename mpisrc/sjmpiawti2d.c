@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
     //! Wave
     sjswave wav;
     flag &= sjswave_init(&wav);
-    flag &= sjswave_getparas(&wav, argc, argv, "recz");
+    flag &= sjswave_getparas(&wav, argc, argv, "profz");
 
     //! Option
     sjsoption opt;
@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
         sjmfree2d(g0);
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpilsartm2d sur=sur.su vp=vp.su recz=recz.su ipp=lsipp.su\n");
+            printf("\nExamples:   sjmpilsartm2d sur=sur.su vp=vp.su profz=profz.su ipp=lsipp.su\n");
             sjbasicinformation();
         }
     }
@@ -145,9 +145,9 @@ void sjawtigrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt,
         //! Memory
         geo->vp2d = sjmflloc2d(sur->nx, sur->nz);
         geo->ipp2d = sjmflloc2d(sur->nx, sur->nz);
-        geo->nipp2d = sjmflloc2d(sur->nx, sur->nz);
-        wav->recz = sjmflloc2d(sur->nr, opt->nt);
-        wav->snapz2d = sjmflloc3d(opt->nsnap, sur->nx, sur->nz);
+        geo->spp2d = sjmflloc2d(sur->nx, sur->nz);
+        wav->profz = sjmflloc2d(sur->nr, opt->nt);
+        wav->fwz2d = sjmflloc3d(opt->nsnap, sur->nx, sur->nz);
         wav->bwz2d = sjmflloc3d(opt->nsnap, sur->nx, sur->nz);
 
         //! Set survey
@@ -173,9 +173,9 @@ void sjawtigrad2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt,
                 for (ix = 0; ix < sur->nx; ++ix) {
                     for (iz = 0; iz < sur->nz; ++iz) {
                         tsimage[ishift + tshift][ix][iz] +=
-                                wav->snapz2d[it - ishift][ix][iz] * wav->bwz2d[it + ishift][ix][iz];
+                                wav->fwz2d[it - ishift][ix][iz] * wav->bwz2d[it + ishift][ix][iz];
                         tsillum[ishift + tshift][ix][iz] +=
-                                wav->snapz2d[it - ishift][ix][iz] * wav->snapz2d[it - ishift][ix][iz];
+                                wav->fwz2d[it - ishift][ix][iz] * wav->fwz2d[it - ishift][ix][iz];
                     }
                 }
             }

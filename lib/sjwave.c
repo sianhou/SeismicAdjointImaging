@@ -221,13 +221,13 @@ void sjawfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
         //! Record
         for (ir = 0; ir < nr; ir++)
-            wav->recz[ir][it] = p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+            wav->profz[ir][it] = p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
 
         //! Wavefield
         if ((it % jsnap) == 0)
             for (ix = nb + marg; ix < nxb - nb - marg; ix++)
                 for (iz = nb + marg; iz < nzb - nb - marg; iz++)
-                    wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
+                    wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
 
         //! Update
         memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
@@ -275,7 +275,7 @@ void sjawfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
             //! Record
             for (ir = 0; ir < nr; ir++)
-                wav->recz[ir][it] -= p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+                wav->profz[ir][it] -= p1[nb + marg + rx[ir]][nb + marg + rz[ir]];
 
             //! Update
             memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
@@ -422,14 +422,14 @@ void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
         //! Record
         for (ir = 0; ir < nr; ir++)
-            wav->recz[ir][it] = s1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+            wav->profz[ir][it] = s1[nb + marg + rx[ir]][nb + marg + rz[ir]];
 
         //! Wavefield
         if ((it % jsnap) == 0)
             for (ix = nb + marg; ix < nxb - nb - marg; ix++)
                 for (iz = nb + marg; iz < nzb - nb - marg; iz++)
                     //wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
-                    wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] =
+                    wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] =
                             (p2[ix][iz] - 2.0 * p1[ix][iz] + p0[ix][iz]) / dt2;
 
         //! Update
@@ -513,10 +513,10 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         //! Source#
         if (opt->ystacksrc == 1) {
             for (ir = 0; ir < nr; ir++)
-                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] += wav->recz[ir][it];
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] += wav->profz[ir][it];
         } else {
             for (ir = 0; ir < nr; ir++)
-                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wav->recz[ir][it];
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wav->profz[ir][it];
         }
 
         //! Calculate velocity
@@ -534,10 +534,10 @@ void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
                 for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
                     for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
                         geo->ipp2d[ix - nb - marg][iz - nb - marg] +=
-                                wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
-                        geo->nipp2d[ix - nb - marg][iz - nb - marg] +=
-                                wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
-                                wav->snapz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
+                                wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
+                        geo->spp2d[ix - nb - marg][iz - nb - marg] +=
+                                wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] *
+                                wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
                     }
                 }
             } else if (opt->rtmopt == 2) {

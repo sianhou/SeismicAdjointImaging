@@ -450,7 +450,7 @@ int sjsgeo_init(sjsgeology *ptr) {
     ptr->vp2d = NULL;
     ptr->vp2d = NULL;
     ptr->ipp2d = NULL;
-    ptr->nipp2d = NULL;
+    ptr->spp2d = NULL;
     ptr->gipp2d = NULL;
     ptr->vpfile = NULL;
     ptr->vsfile = NULL;
@@ -521,59 +521,59 @@ int sjsgeo_getparas2d(sjsgeology *ptr, int argc, char **argv, char *info) {
 
 //! Wavefield
 int sjswave_init(sjswave *ptr) {
-    ptr->recy = NULL;
-    ptr->recx = NULL;
-    ptr->recz = NULL;
-    ptr->snapy2d = NULL;
-    ptr->snapx2d = NULL;
-    ptr->snapz2d = NULL;
-    ptr->recyfile = NULL;
-    ptr->recxfile = NULL;
-    ptr->reczfile = NULL;
+    ptr->profy = NULL;
+    ptr->profx = NULL;
+    ptr->profz = NULL;
+    ptr->fwy2d = NULL;
+    ptr->fwx2d = NULL;
+    ptr->fwz2d = NULL;
+    ptr->profyfile = NULL;
+    ptr->profxfile = NULL;
+    ptr->profzfile = NULL;
     return 1;
 }
 
 int sjswave_display(sjswave *ptr) {
     printf("Display wave information:\n");
-    printf("  recyfile:    %s\n", ptr->recyfile);
-    printf("  recxfile:    %s\n", ptr->recxfile);
-    printf("  reczfile:    %s\n", ptr->reczfile);
+    printf("  profyfile:    %s\n", ptr->profyfile);
+    printf("  profxfile:    %s\n", ptr->profxfile);
+    printf("  profzfile:    %s\n", ptr->profzfile);
     return 1;
 }
 
 int sjswave_getparas(sjswave *ptr, int argc, char **argv, char *info) {
-    if (strcmp(info, "recy") == 0) {
+    if (strcmp(info, "profy") == 0) {
         if (argc == 1) {
-            printf("* recy:        Seicmic record in y (cxline) - direction.\n");
+            printf("* profy:       Seicmic record in y (cxline) - direction.\n");
             return 0;
         } else {
-            if (!sjmgets("recy", ptr->recyfile)) {
-                printf("ERROR: Should set recy!\n");
+            if (!sjmgets("profy", ptr->profyfile)) {
+                printf("ERROR: Should set profy!\n");
                 exit(0);
             }
             return 1;
         }
     }
-    if (strcmp(info, "recx") == 0) {
+    if (strcmp(info, "profx") == 0) {
         if (argc == 1) {
-            printf("* recx:        Seicmic record in x (inline) - direction.\n");
+            printf("* profx:       Seicmic record in x (inline) - direction.\n");
 
             return 0;
         } else {
-            if (!sjmgets("recx", ptr->recxfile)) {
-                printf("ERROR: Should set recx!\n");
+            if (!sjmgets("profx", ptr->profxfile)) {
+                printf("ERROR: Should set profx!\n");
                 exit(0);
             }
             return 1;
         }
     }
-    if (strcmp(info, "recz") == 0) {
+    if (strcmp(info, "profz") == 0) {
         if (argc == 1) {
-            printf("* recz:        Seicmic record in z (depth) - direction.\n");
+            printf("* profz:        Seicmic record in z (depth) - direction.\n");
             return 0;
         } else {
-            if (!sjmgets("recz", ptr->reczfile)) {
-                printf("ERROR: Should set recz!\n");
+            if (!sjmgets("profz", ptr->profzfile)) {
+                printf("ERROR: Should set profz!\n");
                 exit(0);
             }
             return 1;

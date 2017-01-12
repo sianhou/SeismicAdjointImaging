@@ -1,7 +1,0 @@
-1.8-svn	sfsuread	SeismicAdjointImaging/demos/scatter:	hsa@mhl556	Wed Jan 11 19:42:26 2017
-
-	n2=501
-	data_format="native_int"
-	esize=4
-	in="/var/tmp/tfile@"
-	n1=91

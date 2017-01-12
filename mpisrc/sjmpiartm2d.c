@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     //! Wave
     sjswave wav;
     flag &= sjswave_init(&wav);
-    flag &= sjswave_getparas(&wav, argc, argv, "recz");
+    flag &= sjswave_getparas(&wav, argc, argv, "profz");
 
     //! Option
     sjsoption opt;
@@ -47,9 +47,10 @@ int main(int argc, char *argv[]) {
         }
 
         //! Model
-        float **nmig = sjmflloc2d(sur.gnx, sur.gnz);
         geo.gipp2d = sjmflloc2d(sur.gnx, sur.gnz);
+        geo.gspp2d = sjmflloc2d(sur.gnx, sur.gnz);
         geo.gvp2d = sjmflloc2d(sur.gnx, sur.gnz);
+        
         sjreadsuall(geo.gvp2d[0], sur.gnx, sur.gnz, geo.vpfile);
         MPI_Bcast(geo.gvp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
@@ -64,16 +65,16 @@ int main(int argc, char *argv[]) {
             //! Model
             geo.vp2d = sjmflloc2d(sur.nx, sur.nz);
             geo.ipp2d = sjmflloc2d(sur.nx, sur.nz);
-            geo.nipp2d = sjmflloc2d(sur.nx, sur.nz);
+            geo.spp2d = sjmflloc2d(sur.nx, sur.nz);
             sjextract2d(geo.vp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.gvp2d);
 
             //! Forward simulaion
-            wav.recz = sjmflloc2d(sur.nr, opt.nt);
-            wav.snapz2d = sjmflloc3d(opt.nsnap, sur.nx, sur.nz);
+            wav.profz = sjmflloc2d(sur.nr, opt.nt);
+            wav.fwz2d = sjmflloc3d(opt.nsnap, sur.nx, sur.nz);
             sjawfd2d(&sur, &geo, &wav, &opt);
 
             //! Read record
-            sjreadsu(wav.recz[0], sur.nr, opt.nt, sizeof(float), sur.tr, 0, wav.reczfile);
+            sjreadsu(wav.profz[0], sur.nr, opt.nt, sizeof(float), sur.tr, 0, wav.profzfile);
 
             //! Adjoint image
             opt.ystacksrc = 0;
@@ -84,14 +85,14 @@ int main(int argc, char *argv[]) {
             
             //! Stacking
             sjvecaddf(&geo.gipp2d[sur.x0][sur.z0], sur.nx * sur.nz, 1.0f, &geo.gipp2d[sur.x0][sur.z0], 1.0f, &geo.ipp2d[0][0]);
-            sjvecaddf(&nmig[sur.x0][sur.z0],       sur.nx * sur.nz, 1.0f, &nmig[sur.x0][sur.z0],       1.0f, &geo.nipp2d[0][0]);
+            sjvecaddf(&geo.gspp2d[sur.x0][sur.z0], sur.nx * sur.nz, 1.0f, &geo.gspp2d[sur.x0][sur.z0], 1.0f, &geo.spp2d[0][0]);
 
             //! Free
             sjmfree2d(geo.vp2d);
             sjmfree2d(geo.ipp2d);
-            sjmfree2d(geo.nipp2d);
-            sjmfree2d(wav.recz);
-            sjmfree2d(wav.snapz2d);
+            sjmfree2d(geo.spp2d);
+            sjmfree2d(wav.profz);
+            sjmfree2d(wav.fwz2d);
 
             //! Time
             tend = (double) clock();
@@ -108,10 +109,10 @@ int main(int argc, char *argv[]) {
         if (rankid == 0) {
             //! Reduce
             MPI_Reduce(MPI_IN_PLACE, geo.gipp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(MPI_IN_PLACE, nmig[0],       sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(MPI_IN_PLACE, geo.gspp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
             //! Source
-            sjvecdivf(geo.gipp2d[0], sur.gnx * sur.gnz, 1.0, geo.gipp2d[0], nmig[0], 0.00001f);
+            sjvecdivf(geo.gipp2d[0], sur.gnx * sur.gnz, 1.0, geo.gipp2d[0], geo.gspp2d[0], 0.00001f);
 
             //! Output
             sjwritesuall(geo.gipp2d[0], sur.gnx, sur.gnz, opt.ds, geo.ippfile);
@@ -122,16 +123,15 @@ int main(int argc, char *argv[]) {
         } else {
             //! Reduce
             MPI_Reduce(geo.gipp2d[0], geo.gipp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(nmig[0],       nmig[0],       sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(geo.gspp2d[0], geo.gspp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         }
 
         //! Free
         sjmfree2d(geo.gipp2d);
+        sjmfree2d(geo.gspp2d);
         sjmfree2d(geo.gvp2d);
-        sjmfree2d(nmig);
-
     } else {
-        printf("\nExamples:   sjmpiartm2d survey=sur.su vp=vp.su recz=recz.su ipp=mig.su\n");
+        printf("\nExamples:   sjmpiartm2d survey=sur.su vp=vp.su profz=profz.su ipp=mig.su\n");
         sjbasicinformation();
     }
 

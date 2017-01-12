@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
             geo.vp2d = sjmflloc2d(sur.nx, sur.nz);
             geo.ipp2d = sjmflloc2d(sur.nx, sur.nz);
             geo.nipp2d = sjmflloc2d(sur.nx, sur.nz);
-            sjextract2d(geo.gvp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.vp2d);
+            sjextract2d(geo.vp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.gvp2d);
 
             //! Forward simulaion
             wav.recz = sjmflloc2d(sur.nr, opt.nt);
@@ -80,11 +80,11 @@ int main(int argc, char *argv[]) {
             sjawrtmfd2d(&sur, &geo, &wav, &opt);
 
             //! Laplace filter
-            sjfilter2dx(geo.ipp2d, sur.nx, sur.nz, "laplace");
-
+            sjfilter2d(geo.ipp2d, sur.nx, sur.nz, geo.ipp2d, "laplace");
+            
             //! Stacking
             sjvecaddf(&geo.gipp2d[sur.x0][sur.z0], sur.nx * sur.nz, 1.0f, &geo.gipp2d[sur.x0][sur.z0], 1.0f, &geo.ipp2d[0][0]);
-            sjvecaddf(&nmig[sur.x0][sur.z0], sur.nx * sur.nz, 1.0f, &nmig[sur.x0][sur.z0], 1.0f, &geo.nipp2d[0][0]);
+            sjvecaddf(&nmig[sur.x0][sur.z0],       sur.nx * sur.nz, 1.0f, &nmig[sur.x0][sur.z0],       1.0f, &geo.nipp2d[0][0]);
 
             //! Free
             sjmfree2d(geo.vp2d);
@@ -108,13 +108,10 @@ int main(int argc, char *argv[]) {
         if (rankid == 0) {
             //! Reduce
             MPI_Reduce(MPI_IN_PLACE, geo.gipp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(MPI_IN_PLACE, nmig[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(MPI_IN_PLACE, nmig[0],       sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
 
             //! Source
             sjvecdivf(geo.gipp2d[0], sur.gnx * sur.gnz, 1.0, geo.gipp2d[0], nmig[0], 0.00001f);
-
-            //! Cut surface
-            sjsetsurface(geo.gipp2d, sur.gnx, 15, 0.0f);
 
             //! Output
             sjwritesuall(geo.gipp2d[0], sur.gnx, sur.gnz, opt.ds, geo.ippfile);
@@ -125,7 +122,7 @@ int main(int argc, char *argv[]) {
         } else {
             //! Reduce
             MPI_Reduce(geo.gipp2d[0], geo.gipp2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
-            MPI_Reduce(nmig[0], nmig[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
+            MPI_Reduce(nmig[0],       nmig[0],       sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
         }
 
         //! Free
@@ -134,7 +131,7 @@ int main(int argc, char *argv[]) {
         sjmfree2d(nmig);
 
     } else {
-        printf("\nExamples:   sjmpiartm2d sur=sur.su vp=vp.su recz=recz.su ipp=mig.su\n");
+        printf("\nExamples:   sjmpiartm2d survey=sur.su vp=vp.su recz=recz.su ipp=mig.su\n");
         sjbasicinformation();
     }
 

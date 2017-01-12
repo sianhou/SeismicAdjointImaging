@@ -7,7 +7,12 @@
 
 #include "sjinc.h"
 
+#define SJMMAX(a, b) (a > b ? a : b)
+#define SJMMIN(a, b) (a < b ? a : b)
+
 void sjguasssmoothf2d(float **z, int n2, int n1, float alpha, int length, float **x);
+
+void sjfilter2d(float **z, int n2, int n1, float **x, char *mode);
 
 float sjvecdotf(int n, float a, float *x, float *y);
 
@@ -25,6 +30,10 @@ void sjveczerof(float *z, int n);
 
 void sjcgdirection(float *d, int n, float *g1, float *g0, int iter);
 
-float sjcgstepsize(int n, float *s, float *x, float err, int iter);
+float sjcglength(int n, float *s, float *x, float err, int iter);
+
+float sjcgbeta(int n, float *cg, float *g1, float *g0, int iter);
+
+void sjcgsolver(float *z, int n, float *cg, float *g1, float *g0, int iter);
 
 #endif //GJI_SJMATH_H

@@ -11,3 +11,7 @@ If you have any problem, contact me by E-mail, sianhou1987@outlook.com, freely.
 
 Best wishes!
 
+Problems:
+We are developing imaging domain inversion now;
+We hope to add denstiy equation;
+We hope to improve elastic simulation: improve dxdz; improve source;

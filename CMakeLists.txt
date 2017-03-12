@@ -12,7 +12,7 @@ set(CMAKE_C_COMPILER "/opt/intel/compilers_and_libraries_2017.1.132/linux/bin/in
 
 #! Library
 set(SJINC lib/sjinc.h)
-set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjwave.c lib/sjwave.h)
+set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjwave.c)
 add_library(sj ${SJLIB} ${SGLIB})
 
 #! RUNTIME
@@ -47,24 +47,35 @@ find_package ( MPI )
 if ( MPI_FOUND )
     #! Library
     set(SJINC lib/sjinc.h)
-    set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjwave.c lib/sjwave.h)
+    set(SJLIB lib/sjabc.c lib/sjfile.c lib/sjmalloc.c lib/sjmath.c lib/sjwave.c)
     add_library(mpisj ${SJINC} ${SJLIB})
 
     #! RUNTIME
     find_library(mpisj ${SeismicAdjointImaging_BINARY_DIR}/lib)
 
-    #! sgmpiawfd2d
+    #! sjmpiawfd2d
     set(SOURCEFILE mpisrc/sjmpiawfd2d.c)
     add_executable(sjmpiawfd2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiawfd2d mpisj m)
 
-    #! sgmpiartm2d
-    set(SOURCEFILE mpisrc/sjmpiartm2d.c)
+    #! sjmpiawti2d
+    set(SOURCEFILE mpisrc/sjmpiawti2d.c mpisrc/sjimage.h)
+    add_executable(sjmpiawti2d ${SOURCEFILE} ${SJINC})
+    target_link_libraries(sjmpiawti2d mpisj m)
+
+    #! sjmpiafwi2d
+    set(SOURCEFILE mpisrc/sjmpiafwi2d.c mpisrc/sjimage.h)
+    add_executable(sjmpiafwi2d ${SOURCEFILE} ${SJINC})
+    target_link_libraries(sjmpiafwi2d mpisj m)
+
+    #! sjmpiartm2d
+    set(SOURCEFILE mpisrc/sjmpiartm2d.c mpisrc/sjimage.h)
     add_executable(sjmpiartm2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiartm2d mpisj m)
 
-    #! sgmpilsartm2d
-    set(SOURCEFILE mpisrc/sjmpilsartm2d.c)
+    #! sjmpilsartm2d
+    set(SOURCEFILE mpisrc/sjmpialsrtm2d.c mpisrc/sjimage.h)
     add_executable(sjmpilsartm2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpilsartm2d mpisj m)
+
 endif( MPI_FOUND )

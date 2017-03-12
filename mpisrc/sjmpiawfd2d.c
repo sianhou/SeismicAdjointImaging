@@ -31,7 +31,7 @@ int main(int argc, char *argv[]) {
     //! Wavefield
     sjswave wav;
     flag &= sjswave_init(&wav);
-    flag &= sjswave_getparas(&wav, argc, argv, "recz");
+    flag &= sjswave_getparas(&wav, argc, argv, "profz");
 
     //! Option
     sjsoption opt;
@@ -62,15 +62,15 @@ int main(int argc, char *argv[]) {
             sjextract2d(geo.vp2d, sur.x0, sur.z0, sur.nx, sur.nz, geo.gvp2d);
 
             //! Wavefield
-            wav.recz = (float **) sjalloc2d(sur.nr, opt.nt, sizeof(float));
-            wav.snapz2d = (float ***) sjalloc3d(opt.nsnap, sur.nx, sur.nz, sizeof(float));
+            wav.profz = (float **) sjalloc2d(sur.nr, opt.nt, sizeof(float));
+            wav.fwz2d = (float ***) sjalloc3d(opt.nsnap, sur.nx, sur.nz, sizeof(float));
 
             //! Simulation
-            sjawfd2d(&sur, &geo, &wav, &opt);
+            sjafor2d(&sur, &geo, &wav, &opt);
 
             //! Output
             if (rankid == 0) {
-                sjwritesu(wav.recz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is, wav.reczfile);
+                sjwritesu(wav.profz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is, wav.profzfile);
                 tend = (double) clock();
                 printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                        (tend - tstart) / CLOCKS_PER_SEC);
@@ -79,20 +79,19 @@ int main(int argc, char *argv[]) {
                        sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                        sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
 
-                for (mpiid = 1; mpiid < nrank; mpiid++) {
+                for (mpiid = 1; mpiid < nrank; mpiid++)
                     if ((is + mpiid) < sur.ns) {
-                        MPI_Recv(wav.recz[0], sur.nr * opt.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
+                        MPI_Recv(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
-                        sjwritesu(wav.recz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid,
-                                  wav.reczfile);
+                        sjwritesu(wav.profz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid,
+                                  wav.profzfile);
                     }
-                }
             } else {
-                MPI_Send(wav.recz[0], sur.nr * opt.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
+                MPI_Send(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
                 tend = (double) clock();
                 printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                        (tend - tstart) / CLOCKS_PER_SEC);
-                printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
+                printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n", rankid,
                        sur.sx + sur.x0, sur.sz + sur.z0,
                        sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                        sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
@@ -100,8 +99,8 @@ int main(int argc, char *argv[]) {
 
             //! Free
             sjcheckfree2d((void **) geo.vp2d);
-            sjcheckfree2d((void **) wav.recz);
-            sjcheckfree3d((void ***) wav.snapz2d);
+            sjcheckfree2d((void **) wav.profz);
+            sjcheckfree3d((void ***) wav.fwz2d);
         }
 
         //------------------------ Information ------------------------//
@@ -111,7 +110,7 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        printf("\nExamples:   sjmpiawfd2d sur=sur.su vp=vp.su recz=recz.su nt=3001\n");
+        printf("\nExamples:   sjmpiawfd2d sur=sur.su vp=vp.su profz=profz.su nt=3001\n");
         sjbasicinformation();
     }
 

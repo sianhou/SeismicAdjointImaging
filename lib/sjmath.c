@@ -4,6 +4,10 @@
 
 #include "sjmath.h"
 
+int sjmaxabscorf(float *pobs, float *pcal, int n, int maxshift) {
+
+}
+
 void sjguasssmoothf2d(float **z, int n2, int n1, float alpha, int length, float **x) {
     int ii, jj, ix, iz;
 

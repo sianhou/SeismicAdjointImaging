@@ -35,6 +35,6 @@ nthd=64
 # LSRTM
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpilsartm2d survey=survey.su vp=vel0.su recz=recz.su nt=4201 dt=0.001 ipp=mig.su lsipp=lsmig.su
+mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vel0.su recz=$outpath/recz.su dt=0.001 nt=4201 niter=50 ydetails=1 izz=$outpath/lsmig.su
 
 

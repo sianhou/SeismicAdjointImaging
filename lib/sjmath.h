@@ -10,6 +10,8 @@
 #define SJMMAX(a, b) (a > b ? a : b)
 #define SJMMIN(a, b) (a < b ? a : b)
 
+int sjfindabsmaxf(float *a, int n);
+
 void sjguasssmoothf2d(float **z, int n2, int n1, float alpha, int length, float **x);
 
 void sjfilter2d(float **z, int n2, int n1, float **x, char *mode);

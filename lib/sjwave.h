@@ -18,16 +18,41 @@ void sjfilter2dx(float **a, int n2, int n1, char *mode);
 void sjsetsurface(float **a, int n2, int n1, float val);
 
 /**********************************************************************************************/
-/* ! Finite Difference                                                                        */
+/* ! Acoustic                                                                                 */
 /**********************************************************************************************/
 
-//! Two dimension constant density acoustic forward simulation
-void sjawfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+//! Two dimension constant density acoustic forward exploration
+void sjafor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
-//! Two dimension constant density acoustic scatter forward simulation
-void sjaswfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+//! Two dimension constant density acoustic scatter forward exploration
+void sjasfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
-//! Two dimension acoustic reverse time simulation based on constant density equation
-void sjawrtmfd2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+//! Two dimension constant density acoustic RTM backward exploration
+void sjartmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+//! Two dimension constant density acoustic Time-Shift RTM backward exploration
+void sjatsrtmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+//! Two dimension constant density acoustic FWI backward exploration
+void sjafwibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+//! Two dimension constant density acoustic LSRTM forward simulation
+void sjalsrtmfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+//! Two dimension constant density acoustic LSRTM backward exploration
+void sjalsrtmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+
+//! Two dimension acoustic RTI backward exploration based on constant density equation
+void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+
+
+/**********************************************************************************************/
+/* ! Elastic                                                                                  */
+/**********************************************************************************************/
+
+//! Two dimension constant density elastic forward exploration
+void sjefor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
 #endif //SJI_SJWAVE_H

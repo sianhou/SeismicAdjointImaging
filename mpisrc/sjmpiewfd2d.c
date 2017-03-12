@@ -36,6 +36,7 @@ int main(int argc, char *argv[]) {
     //! Wavefield
     sjswave wav;
     flag &= sjswave_init(&wav);
+    flag &= sjswave_getparas(&wav, argc, argv, "profx");
     flag &= sjswave_getparas(&wav, argc, argv, "profz");
 
     //! Option
@@ -115,7 +116,10 @@ int main(int argc, char *argv[]) {
 
             //! Free
             sjcheckfree2d((void **) geo.vp2d);
+            sjcheckfree2d((void **) geo.vs2d);
+            sjcheckfree2d((void **) wav.profx);
             sjcheckfree2d((void **) wav.profz);
+            sjcheckfree3d((void ***) wav.fwx2d);
             sjcheckfree3d((void ***) wav.fwz2d);
         }
 

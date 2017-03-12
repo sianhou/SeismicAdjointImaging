@@ -21,4 +21,4 @@ $binpath/sjsurvey2d ns=37 nr=441 vel=$outpath/vp.su x0=0 nx=460 dx0=0 sx0=50 sz0
 # Simulation
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002
+mpirun -np $nthd $binpath/sjmpiewfd2d survey=$outpath/survey.su vp=$outpath/vp.su vs=$outpath/vs.su profx=$outpath/recx.su profz=$outpath/recz.su nt=1251 dt=0.002

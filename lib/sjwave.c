@@ -1173,7 +1173,6 @@ void sjefor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
                 w1[ix + sx][iz + sz] += wavelet[it] * expf(-srcdecay * (ix * ix + iz * iz));
             }
 
-
         //! Calculate veloctiy
         for (ix = marg; ix < nxb - marg; ix++)
             for (iz = marg; iz < nzb - marg; iz++) {
@@ -1183,7 +1182,6 @@ void sjefor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
                 w2[ix][iz] = cp[ix][iz] * sjmfd2dn1(w1, ix, iz) + cs[ix][iz] * sjmfd2dn2(w1, ix, iz) +
                              (cp[ix][iz] - cs[ix][iz]) * sjmfd2dnc(u1, ix, iz) + 2.0f * w1[ix][iz] - w0[ix][iz];
             }
-
 
         //! Boundary condition
         sjapplythabc2d(u2, u1, u0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);

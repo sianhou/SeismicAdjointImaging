@@ -1,36 +1,40 @@
 #! /bin/bash
 
-binpath=../../bin
+mpdboot
+
+binpath=../../../bin
 outpath=.
-nthd=41
+nthd=64
 
 #-----------------------------------------------------------------------------
-# Convert binary
+# Convert the data
 #-----------------------------------------------------------------------------
 
-$binpath/sjbin2su binary=vp.bin n2=501 n1=184 su=$outpath/vp.su
+# $binpath/sjbin2su binary=sb2as0.rsf@ n2=2067 n1=401 su=vel0.su
+# $binpath/sjbin2su binary=sb2as7r10.rsf@ n2=2067 n1=401 su=vel1.su
 
 #-----------------------------------------------------------------------------
-# Creative survey
+# Creative a survey
 #-----------------------------------------------------------------------------
 
-$binpath/sjsurvey2d ns=41 nr=482 vel=$outpath/vp.su x0=0 nx=501 dx0=0 sx0=50 sz0=5 dsx=10 rx0=10 rz0=5 drx=1 drz=0  survey=$outpath/survey.su
+# $binpath/sjsurvey2d ns=108 nr=301 vel=vel0.su x0=341 nx=321 dx0=10 sx0=160 sz0=5 dsx=0 rx0=10 rz0=5 drx=1 drz=0 survey=survey.su
 
 #-----------------------------------------------------------------------------
 # Simulation
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001
+# mpirun -np $nthd $binpath/sjmpiawfd2d survey=survey.su vp=vel0.su recz=recz.su nt=4201 dt=0.001
 
 #-----------------------------------------------------------------------------
 # RTM
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001 izz=$outpath/mig.su
+# mpirun -np $nthd $binpath/sjmpiartm2d survey=survey.su vp=vel0.su recz=recz.su nt=4201 dt=0.001 ipp=mig.su
 
 #-----------------------------------------------------------------------------
 # LSRTM
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001 niter=50 ydetails=1 izz=$outpath/lsmig.su
+mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vel0.su recz=$outpath/recz.su dt=0.001 nt=4201 niter=50 ydetails=1 izz=$outpath/lsmig.su
+
 

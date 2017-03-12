@@ -1,6 +1,6 @@
 #! /bin/bash
 
-binpath=../../bin
+binpath=../../../bin
 outpath=.
 
 nthd=37

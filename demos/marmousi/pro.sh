@@ -10,9 +10,6 @@
 # Simulation with GFDXYZ
 #-----------------------------------------------------------------------------
 
-# Openmp
-#../../bin/sjawsgfd2d svy=marsvy.su vp=marvel.su rec=marrec.su nt=3001 dt=0.001 ompnum=8
-
 # MPI
 mpirun -np 2 ../../bin/sjmpiawsgfd2d svy=marsvy.su vp=marvel.su rec=marrec.su nt=3001 dt=0.001
 
@@ -20,8 +17,5 @@ mpirun -np 2 ../../bin/sjmpiawsgfd2d svy=marsvy.su vp=marvel.su rec=marrec.su nt
 # RTM with GFDXYZ
 #-----------------------------------------------------------------------------
 
-# Openmp
-#../../bin/sjartm2d svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig.su ompnum=8
-
 # MPI
-mpirun -np 2 ../../bin/sjmpiartm2d svy=marsvy.su vp=marvel.su rec=marrec.su mig=marmig_mpi.su
+mpirun -np 2 ../../bin/sjmpiartm2d svy=marsvy.su vp=marvel.su rec=marrec.su izz=marmig_mpi.su

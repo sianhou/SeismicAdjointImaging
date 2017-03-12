@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
             wav.fwz2d = (float ***) sjalloc3d(opt.nsnap, sur.nx, sur.nz, sizeof(float));
 
             //! Simulation
-            sjawfd2d(&sur, &geo, &wav, &opt);
+            sjafor2d(&sur, &geo, &wav, &opt);
 
             //! Output
             if (rankid == 0) {
@@ -79,20 +79,19 @@ int main(int argc, char *argv[]) {
                        sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                        sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
 
-                for (mpiid = 1; mpiid < nrank; mpiid++) {
+                for (mpiid = 1; mpiid < nrank; mpiid++)
                     if ((is + mpiid) < sur.ns) {
                         MPI_Recv(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
                         sjwritesu(wav.profz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid,
                                   wav.profzfile);
                     }
-                }
             } else {
                 MPI_Send(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
                 tend = (double) clock();
                 printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                        (tend - tstart) / CLOCKS_PER_SEC);
-                printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
+                printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n", rankid,
                        sur.sx + sur.x0, sur.sz + sur.z0,
                        sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                        sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);

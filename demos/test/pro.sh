@@ -2,41 +2,37 @@
 
 binpath=../../bin
 outpath=.
+
 nthd=37
 
 #-----------------------------------------------------------------------------
 # Convert binary
 #-----------------------------------------------------------------------------
 
-$binpath/sjbin2su binary=vp.bin n2=460 n1=201 su=$outpath/vp.su
+$binpath/sjbin2su binary=vp0.bin n2=460 n1=201 su=$outpath/vp0.su
+
+$binpath/sjbin2su binary=vps.bin n2=460 n1=201 su=$outpath/vps.su
+
+$binpath/sjbin2su binary=vpf.bin n2=460 n1=201 su=$outpath/vpf.su
 
 #-----------------------------------------------------------------------------
 # Creative survey
 #-----------------------------------------------------------------------------
 
-$binpath/sjsurvey2d ns=1 nr=441 vel=$outpath/vp.su x0=0 nx=460 dx0=0 sx0=231 sz0=5 dsx=10 rx0=10 rz0=5 drx=1 drz=0  survey=$outpath/survey.su
+$binpath/sjsurvey2d ns=37 nr=441 vel=$outpath/vp0.su x0=0 nx=460 dx0=0 sx0=50 sz0=5 dsx=10 rx0=10 rz0=5 drx=1 drz=0 survey=$outpath/survey.su
 
 #-----------------------------------------------------------------------------
 # Simulation
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002
+mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp0.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002
 
 #-----------------------------------------------------------------------------
-# RTM
+# Inversion
 #-----------------------------------------------------------------------------
 
-# mpirun -np $nthd $binpath/sjmpiartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002 jsnap=1 ipp=$outpath/mig.su
+mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=vps.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 izz=$outpath/ipps.su
 
-#-----------------------------------------------------------------------------
-# LSRTM
-#-----------------------------------------------------------------------------
+# mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=vp0.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 ipp=$outpath/ipp0.su
 
-# mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002 jsnap=1 ipp=$outpath/lsmig.su
-
-#-----------------------------------------------------------------------------
-# AWTI
-#-----------------------------------------------------------------------------
-
-mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002 jsnap=1 ipp=$outpath/lsmig.su
-
+# mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=vpf.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 ipp=$outpath/ippf.su

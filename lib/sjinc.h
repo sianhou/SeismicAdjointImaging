@@ -557,9 +557,22 @@ typedef struct {
 typedef struct {
     float **gvp2d, **gvs2d;
     float **vp2d, **vs2d;
-    float **gipp2d, **gspp2d;
-    float **ipp2d, **spp2d;
-    char *vpfile, *vsfile, *ippfile,*lsippfile;
+
+    //! imaging
+    float **ixx2d, **iyy2d, **izz2d, ***ixx3d, ***iyy3d, ***izz3d;
+    float **gixx2d, **giyy2d, **gizz2d, ***gixx3d, ***giyy3d, ***gizz3d;
+
+    //! illumination
+    float **nxx2d, **nyy2d, **nzz2d, ***nxx3d, ***nyy3d, ***nzz3d;
+    float **gnxx2d, **gnyy2d, **gnzz2d, ***gnxx3d, ***gnyy3d, ***gnzz3d;
+
+    //! gradient
+    float **gxx2d, **gyy2d, **gzz2d, ***gxx3d, ***gyy3d, ***gzz3d;
+    float **ggxx2d, **ggyy2d, **ggzz2d, ***ggxx3d, ***ggyy3d, ***ggzz3d;
+
+    //! File
+
+    char *vpfile, *vsfile, *ixxfile, *iyyfile, *izzfile, *lsippfile;
 } sjsgeology;
 
 //! Wavefield
@@ -567,6 +580,10 @@ typedef struct {
     float **profy, **profx, **profz;
     float ***fwy2d, ***fwx2d, ***fwz2d;
     float ***bwy2d, ***bwx2d, ***bwz2d;
+    float ***fsy2d, ***fsx2d, ***fsz2d;
+    float ***bsy2d, ***bsx2d, ***bsz2d;
+    float ***asy2d, ***asx2d, ***asz2d;
+    float ***ary2d, ***arx2d, ***arz2d;
     char *profyfile, *profxfile, *profzfile;
 } sjswave;
 
@@ -574,16 +591,14 @@ typedef struct {
 typedef struct {
     int nt, k1, jsnap, nsnap, srcrange, srctrunc, ystacksrc;
     float dt, fp, amp, srcdecay;
-
     int nb;
     float ds;
-
     int ycutdirect;
     int ycalscatter;
-
+    int ydetails;
     int rtmopt;
-
     int niter;
+    int maxshift;
 } sjsoption;
 
 #include "sjabc.h"

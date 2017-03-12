@@ -449,12 +449,18 @@ int sjsgeo_init(sjsgeology *ptr) {
     ptr->gvs2d = NULL;
     ptr->vp2d = NULL;
     ptr->vp2d = NULL;
-    ptr->ipp2d = NULL;
-    ptr->spp2d = NULL;
-    ptr->gipp2d = NULL;
+    ptr->izz2d = NULL;
+    ptr->izz3d = NULL;
+    ptr->nzz2d = NULL;
+    ptr->nzz3d = NULL;
+    ptr->gizz2d = NULL;
     ptr->vpfile = NULL;
     ptr->vsfile = NULL;
-    ptr->ippfile = NULL;
+
+    ptr->ixxfile = NULL;
+    ptr->iyyfile = NULL;
+    ptr->izzfile = NULL;
+
     ptr->lsippfile = NULL;
     return 1;
 }
@@ -463,7 +469,11 @@ int sjsgeo_display(sjsgeology *ptr) {
     printf("Display geo information:\n");
     printf("  vpfile:      %s\n", ptr->vpfile);
     printf("  vsfile:      %s\n", ptr->vsfile);
-    printf("  ippfile:     %s\n", ptr->ippfile);
+
+    printf("  ixxfile:     %s\n", ptr->ixxfile);
+    printf("  iyyfile:     %s\n", ptr->iyyfile);
+    printf("  izzfile:     %s\n", ptr->izzfile);
+
     printf("  lsippfile:   %s\n", ptr->lsippfile);
     return 1;
 }
@@ -493,18 +503,46 @@ int sjsgeo_getparas2d(sjsgeology *ptr, int argc, char **argv, char *info) {
             return 1;
         }
     }
-    if (strcmp(info, "ipp") == 0) {
+
+
+    if (strcmp(info, "ixx") == 0) {
         if (argc == 1) {
-            printf("* ipp:         Image file of P-P wave.\n");
+            printf("* ixx:         Image file of X-X data.\n");
             return 0;
         } else {
-            if (!sjmgets("ipp", ptr->ippfile)) {
-                printf("ERROR: Should set ipp file!\n");
+            if (!sjmgets("ixx", ptr->ixxfile)) {
+                printf("ERROR: Should set ixx file!\n");
                 exit(0);
             }
             return 1;
         }
     }
+    if (strcmp(info, "iyy") == 0) {
+        if (argc == 1) {
+            printf("* iyy:         Image file of Y-Y data.\n");
+            return 0;
+        } else {
+            if (!sjmgets("iyy", ptr->iyyfile)) {
+                printf("ERROR: Should set iyy file!\n");
+                exit(0);
+            }
+            return 1;
+        }
+    }
+    if (strcmp(info, "izz") == 0) {
+        if (argc == 1) {
+            printf("* izz:         Image file of Z-Z data.\n");
+            return 0;
+        } else {
+            if (!sjmgets("izz", ptr->izzfile)) {
+                printf("ERROR: Should set izz file!\n");
+                exit(0);
+            }
+            return 1;
+        }
+    }
+
+
     if (strcmp(info, "lsipp") == 0) {
         if (argc == 1) {
             printf("* lsipp:       Least square image file of P-P wave.\n");
@@ -542,18 +580,6 @@ int sjswave_display(sjswave *ptr) {
 }
 
 int sjswave_getparas(sjswave *ptr, int argc, char **argv, char *info) {
-    if (strcmp(info, "profy") == 0) {
-        if (argc == 1) {
-            printf("* profy:       Seicmic record in y (cxline) - direction.\n");
-            return 0;
-        } else {
-            if (!sjmgets("profy", ptr->profyfile)) {
-                printf("ERROR: Should set profy!\n");
-                exit(0);
-            }
-            return 1;
-        }
-    }
     if (strcmp(info, "profx") == 0) {
         if (argc == 1) {
             printf("* profx:       Seicmic record in x (inline) - direction.\n");
@@ -562,6 +588,18 @@ int sjswave_getparas(sjswave *ptr, int argc, char **argv, char *info) {
         } else {
             if (!sjmgets("profx", ptr->profxfile)) {
                 printf("ERROR: Should set profx!\n");
+                exit(0);
+            }
+            return 1;
+        }
+    }
+    if (strcmp(info, "profy") == 0) {
+        if (argc == 1) {
+            printf("* profy:       Seicmic record in y (cxline) - direction.\n");
+            return 0;
+        } else {
+            if (!sjmgets("profy", ptr->profyfile)) {
+                printf("ERROR: Should set profy!\n");
                 exit(0);
             }
             return 1;
@@ -600,7 +638,8 @@ int sjsoption_init(sjsoption *ptr) {
     ptr->ds = -1.0f;
     ptr->ycutdirect = -1;
     ptr->ycalscatter = -1;
-
+    ptr->ydetails = 0;
+    ptr->niter = 20;
     ptr->rtmopt = 1; //! Normal image, 2 = keep wavefield
     return 1;
 }
@@ -622,6 +661,8 @@ int sjsoption_display(sjsoption *ptr) {
     printf("  ds:          %f\n", ptr->ds);
     printf("  ycutdirect:  %d\n", ptr->ycutdirect);
     printf("  ycalscatter: %d\n", ptr->ycalscatter);
+    printf("  ydetails:    %d\n", ptr->ydetails);
+    printf("  niter:       %d\n", ptr->niter);
     return 1;
 }
 
@@ -629,7 +670,7 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
     if (argc == 1) {
         printf("* nt:          Total calculate time.\n");
         printf("  k1:          Peak position of wavelet, default = 50.\n");
-        printf("  jsnap:       Interval of snap, default = 2.\n");
+        printf("  jsnap:       Interval of snap, default = 1.\n");
         printf("  srcrange:    Total range of source, default = 10.\n");
         printf("  srctrunc:    Total time of source, default = 301.\n");
         printf("  ystacksrc:   Process source, 0: boundary condition;\n");
@@ -644,6 +685,9 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
         printf("                                1: cut direct (default).\n");
         printf("  ycalscatter: Calculate scatter, 0: don't calculate (default);\n");
         printf("                                  1: calculate.\n");
+        printf("  ydetails:    Output details,    0: don't output (default);\n");
+        printf("                                  1: output.\n");
+        printf("  niter:       Number of loop, default=20.\n");
         return 0;
     } else {
         if (!sjmgeti("nt", ptr->nt)) {
@@ -651,7 +695,7 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
             exit(0);
         }
         if (!sjmgeti("k1", ptr->k1)) ptr->k1 = 50;
-        if (!sjmgeti("jsnap", ptr->jsnap)) ptr->jsnap = 2;
+        if (!sjmgeti("jsnap", ptr->jsnap)) ptr->jsnap = 1;
         ptr->nsnap = (ptr->nt - 1) / ptr->jsnap + 1;
         if (!sjmgeti("srcrange", ptr->srcrange)) ptr->srcrange = 10;
         if (!sjmgeti("srctrunc", ptr->srctrunc)) ptr->srctrunc = 301;
@@ -664,6 +708,8 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
         if (!sjmgetf("ds", ptr->ds)) ptr->ds = 10.0;
         if (!sjmgeti("ycutdirect", ptr->ycutdirect)) ptr->ycutdirect = 1;
         if (!sjmgeti("ycalscatter", ptr->ycalscatter)) ptr->ycalscatter = 0;
+        if (!sjmgeti("ydetails", ptr->ydetails)) ptr->ydetails = 0;
+        if (!sjmgeti("niter", ptr->niter)) ptr->niter = 20;
         return 1;
     }
 }

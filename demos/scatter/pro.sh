@@ -26,11 +26,11 @@ mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp.s
 # RTM
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001 jsnap=1 ipp=$outpath/mig.su
+mpirun -np $nthd $binpath/sjmpiartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001 izz=$outpath/mig.su
 
 #-----------------------------------------------------------------------------
 # LSRTM
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001 jsnap=1 ipp=$outpath/lsmig.su
+mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=2501 dt=0.001 niter=50 ydetails=1 izz=$outpath/lsmig.su
 

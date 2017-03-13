@@ -398,14 +398,12 @@ void sjasfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
             wav->profz[ir][it] = s1[nb + marg + rx[ir]][nb + marg + rz[ir]];
 
         //! Wavefield
-        if ((it % jsnap) == 0) {
-            for (ix = nb + marg; ix < nxb - nb - marg; ++ix) {
+        if ((it % jsnap) == 0)
+            for (ix = nb + marg; ix < nxb - nb - marg; ++ix)
                 for (iz = nb + marg; iz < nzb - nb - marg; ++iz) {
                     wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = p1[ix][iz];
                     wav->fsz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = s1[ix][iz];
                 }
-            }
-        }
 
         //! Update
         memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
@@ -960,7 +958,130 @@ void sjalsrtmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt
     sjmfree2d(p2);
 }
 
-//! Two dimension acoustic RTI backward exploration based on constant density equation
+//! Two dimension constant density acoustic RTI backward exploration
+void sjartibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
+
+    //------------------------ Runtime ------------------------//
+    int it, ir, ix, iz, shift;
+    const int marg = 6;
+
+    //------------------------ Option ------------------------//
+    int nt = opt->nt;
+    int jsnap = opt->jsnap;
+    float dt = opt->dt;
+    float dt2 = opt->dt * opt->dt;
+    int nb = opt->nb;
+    float ds = opt->ds;
+
+    //------------------------ Survey ------------------------//
+    int nx = sur->nx;
+    int nz = sur->nz;
+    int nr = sur->nr;
+    int *rx = sur->rx;
+    int *rz = sur->rz;
+
+    //------------------------ Model ------------------------//
+    int nxb = nx + 2 * marg + 2 * nb;
+    int nzb = nz + 2 * marg + 2 * nb;
+    float ids2 = dt2 / ds / ds;
+    float **cp = sjmflloc2d(nxb, nzb);
+    float **ipp = sjmflloc2d(nxb, nzb);
+    sjextend2d(cp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vp2d);
+    sjextend2d(ipp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->izz2d);
+
+    //------------------------ Boundary condition ------------------------//
+    float **gxl = sjmflloc2d(nzb, 8);
+    float **gxr = sjmflloc2d(nzb, 8);
+    float **gzu = sjmflloc2d(nxb, 8);
+    float **gzb = sjmflloc2d(nxb, 8);
+
+    //------------------------ Wavefield ------------------------//
+    float **p2 = sjmflloc2d(nxb, nzb);
+    float **p1 = sjmflloc2d(nxb, nzb);
+    float **p0 = sjmflloc2d(nxb, nzb);
+    float **s2 = sjmflloc2d(nxb, nzb);
+    float **s1 = sjmflloc2d(nxb, nzb);
+    float **s0 = sjmflloc2d(nxb, nzb);
+
+    //------------------------ Initialization ------------------------//
+    //! Boundary condition
+    sjinitthabc2d(cp, cp, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+    //! Model
+    sjvecmulf(cp[0], nxb * nzb, ids2, cp[0], cp[0]);
+    //! Wavefield
+    memset(p2[0], 0, nxb * nzb * sizeof(float));
+    memset(p1[0], 0, nxb * nzb * sizeof(float));
+    memset(p0[0], 0, nxb * nzb * sizeof(float));
+    memset(s2[0], 0, nxb * nzb * sizeof(float));
+    memset(s1[0], 0, nxb * nzb * sizeof(float));
+    memset(s0[0], 0, nxb * nzb * sizeof(float));
+
+    //------------------------ Wavefield exploration ------------------------//
+    for (it = nt - 1; it >= 0; --it) {
+
+        //! Source
+        if (opt->ystacksrc == 1) {
+            for (ir = 0; ir < nr; ir++)
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] += wav->profz[ir][it];
+        } else {
+            for (ir = 0; ir < nr; ir++)
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wav->profz[ir][it];
+        }
+
+        //! Primary wavefield
+        for (ix = marg; ix < nxb - marg; ++ix)
+            for (iz = marg; iz < nzb - marg; ++iz)
+                p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz))
+                             + 2.0f * p1[ix][iz] - p0[ix][iz];
+
+        //! Scatter source
+        for (ix = nb + marg + 10; ix < nxb - nb - marg - 10; ++ix)
+            for (iz = nb + marg + 10; iz < nzb - nb - marg - 10; ++iz)
+                s1[ix][iz] += (p2[ix][iz] - 2.0f * p1[ix][iz] + p0[ix][iz]) / dt2 * ipp[ix][iz];
+
+        //! Scatter wavefield
+        for (ix = marg; ix < nxb - marg; ++ix)
+            for (iz = marg; iz < nzb - marg; ++iz)
+                s2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(s1, ix, iz) + sjmfd2dn2(s1, ix, iz))
+                             + 2.0f * s1[ix][iz] - s0[ix][iz];
+
+        //! Boundary condition
+        sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+        sjapplythabc2d(s2, s1, s0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+        //! Imaging
+        if ((it % jsnap) == 0)
+            for (ix = nb + marg; ix < nxb - nb - marg; ++ix)
+                for (iz = nb + marg; iz < nzb - nb - marg; ++iz) {
+                    geo->gzz2d[ix - nb - marg][iz - nb - marg] +=
+                            wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * s1[ix][iz] +
+                            wav->fsz2d[it / jsnap][ix - nb - marg][iz - nb - marg] * p1[ix][iz];
+                }
+
+        //! Update
+        memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
+        memcpy(p1[0], p2[0], nxb * nzb * sizeof(float));
+        memcpy(s0[0], s1[0], nxb * nzb * sizeof(float));
+        memcpy(s1[0], s2[0], nxb * nzb * sizeof(float));
+    }
+
+    sjmfree2d(cp);
+    sjmfree2d(ipp);
+
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
+
+    sjmfree2d(p2);
+    sjmfree2d(p1);
+    sjmfree2d(p0);
+    sjmfree2d(s2);
+    sjmfree2d(s1);
+    sjmfree2d(s0);
+}
+
+//! Two dimension constant density acoustic WTI backward exploration
 void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
     //------------------------ Runtime ------------------------//
@@ -1020,6 +1141,7 @@ void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
 
     //------------------------ Wavefield exploration ------------------------//
     for (it = nt - 1; it >= 0; --it) {
+
         //! Source
         if (opt->ystacksrc == 1) {
             for (ir = 0; ir < nr; ir++)
@@ -1081,10 +1203,6 @@ void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
     sjmfree2d(s1);
     sjmfree2d(s0);
 }
-
-
-
-
 
 
 

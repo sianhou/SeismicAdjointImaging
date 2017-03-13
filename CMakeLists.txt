@@ -58,10 +58,10 @@ if ( MPI_FOUND )
     add_executable(sjmpiawfd2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiawfd2d mpisj m)
 
-    #! sjmpiawti2d
-    set(SOURCEFILE mpisrc/sjmpiawti2d.c mpisrc/sjimage.h)
-    add_executable(sjmpiawti2d ${SOURCEFILE} ${SJINC})
-    target_link_libraries(sjmpiawti2d mpisj m)
+    #! sjmpiarti2d
+    set(SOURCEFILE mpisrc/sjmpiarti2d.c mpisrc/sjimage.h)
+    add_executable(sjmpiarti2d ${SOURCEFILE} ${SJINC})
+    target_link_libraries(sjmpiarti2d mpisj m)
 
     #! sjmpiafwi2d
     set(SOURCEFILE mpisrc/sjmpiafwi2d.c mpisrc/sjimage.h)

@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
         sjmfree2d(g0);
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpialsrtm2d sur=sur.su vp=vp.su profz=profz.su izz=lsipp.su\n");
+            printf("\nExamples:   sjmpialsrtm2d survey=survey.su vp=vp.su profz=profz.su izz=lsipp.su\n");
             sjbasicinformation();
         }
     }

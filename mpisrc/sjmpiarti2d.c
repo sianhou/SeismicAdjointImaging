@@ -44,10 +44,9 @@ int main(int argc, char *argv[]) {
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf("------------------------ 2D Acoustic WTI start ------------------------\n");
+            printf("------------------------ 2D Acoustic RTI start ------------------------\n");
         }
 
-        opt.niter = 0;
         opt.maxshift = 200;
 
         //! Allocate memory
@@ -84,7 +83,6 @@ int main(int argc, char *argv[]) {
                     for (iz = 0; iz < sur.gnz; iz++)
                         geo.ggzz2d[ix][iz] = geo.ggzz2d[ix][iz] / maxamp * 10.0f;
 
-
                 //! CG
                 sjcgsolver(geo.gvp2d[0], sur.gnx * sur.gnz, cg[0], geo.ggzz2d[0], g0[0], iter);
 
@@ -102,7 +100,7 @@ int main(int argc, char *argv[]) {
                 //! Information
                 Tend = (double) clock();
                 printf("Acoustic RTI complete - %2d/%2d - time=%6.2fs.\n",
-                       iter + 1, opt.niter + 1, (Tend - Tstart) / CLOCKS_PER_SEC);
+                       iter + 1, opt.niter, (Tend - Tstart) / CLOCKS_PER_SEC);
             }
 
             iter += 1;
@@ -121,7 +119,7 @@ int main(int argc, char *argv[]) {
         sjmfree2d(g0);
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpiarti2d sur=sur.su vp=vp.su profz=profz.su izz=final_vp.su\n");
+            printf("\nExamples:   sjmpiarti2d survey=survey.su vp=vp.su profz=profz.su izz=final_vp.su\n");
             sjbasicinformation();
         }
     }

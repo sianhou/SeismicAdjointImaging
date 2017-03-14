@@ -57,4 +57,7 @@ void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 //! Two dimension constant density elastic forward exploration
 void sjefor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
+//! Two dimension constant density elastic forward exploration with SGFD
+void sjesgfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
 #endif //SJI_SJWAVE_H

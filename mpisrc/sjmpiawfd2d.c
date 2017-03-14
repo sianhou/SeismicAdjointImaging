@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        printf("\nExamples:   sjmpiawfd2d sur=sur.su vp=vp.su profz=profz.su nt=3001\n");
+        printf("\nExamples:   sjmpiawfd2d survey=survey.su vp=vp.su profz=profz.su nt=3001\n");
         sjbasicinformation();
     }
 

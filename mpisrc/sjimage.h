@@ -414,14 +414,14 @@ void sjartishift(float **pobs, float **pcal, int nr, int nt, int maxshift, float
 void sjartig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
     //------------------------ Runtime ------------------------//
-    int is = 0, shift;
+    int is = 0;
     double tstart, tend;
     int rankid, nrank;
     MPI_Comm_rank(MPI_COMM_WORLD, &rankid);
     MPI_Comm_size(MPI_COMM_WORLD, &nrank);
 
     //------------------------ Model ------------------------//
-    MPI_Bcast(geo->gizz2d, sur->gnx * sur->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(geo->gizz2d[0], sur->gnx * sur->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
     MPI_Bcast(geo->gvp2d[0], sur->gnx * sur->gnz, MPI_FLOAT, 0, MPI_COMM_WORLD);
 
     //------------------------ Calculating gradient ------------------------//

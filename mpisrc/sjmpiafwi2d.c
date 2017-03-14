@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
         sjmfree2d(cg);
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpiafwi2d sur=sur.su vp=vp.su recz=recz.su izz=final_vp.su\n");
+            printf("\nExamples:   sjmpiafwi2d survey=survey.su vp=vp.su recz=recz.su izz=final_vp.su\n");
             sjbasicinformation();
         }
     }

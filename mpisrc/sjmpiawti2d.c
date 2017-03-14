@@ -69,7 +69,7 @@ int main(int argc, char *argv[]) {
         float *coe = sjmflloc1d(2 * opt.maxshift + 1);
         float **g0 = sjmflloc2d(sur.gnx, sur.gnz);
         float **cg = sjmflloc2d(sur.gnx, sur.gnz);
-
+/*
         //! Inversion
         do {
             //! Calculate Time-Shift RTM image
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
             //! Calculate RTI gradient
             sjveczerof(geo.ggzz2d[0], sur.gnx * sur.gnz);
             sjveczerof(geo.ggzz3d[0][0], (2 * opt.maxshift + 1) * sur.gnx * sur.gnz);
-            sjawtigrad2d(&sur, &geo, &wav, &opt);
+            sjawti2d(&sur, &geo, &wav, &opt);
 
             //! Optimization
             if (rankid == 0) {
@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
             iter += 1;
 
         } while (iter < opt.niter);
-
+*/
         sjmfree2d(geo.gvp2d);
         sjmfree2d(geo.ggzz2d);
         sjmfree3d(geo.gizz3d);
@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 */
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpilsartm2d sur=sur.su vp=vp.su profz=profz.su ipp=lsipp.su\n");
+            printf("\nExamples:   sjmpilsartm2d survey=survey.su vp=vp.su profz=profz.su ipp=lsipp.su\n");
 
             sjbasicinformation();
 

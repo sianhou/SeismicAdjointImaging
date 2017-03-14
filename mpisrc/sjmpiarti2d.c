@@ -1,5 +1,5 @@
 //
-// Authors: Guanchao Wang, Sian Hou
+// Created by hsa on 12/01/17.
 //
 
 #include <mpi.h>
@@ -39,63 +39,87 @@ int main(int argc, char *argv[]) {
     flag &= sjsoption_init(&opt);
     flag &= sjsoption_getparas(&opt, argc, argv);
 
-    //------------------------ AFWI2D ------------------------//
+    //------------------------ AWTI2D ------------------------//
     if (flag) {
-
         //! Time
         if (rankid == 0) {
             Tstart = (double) clock();
-            printf("------------------------ 2D Acoustic FWI start ------------------------\n");
+            printf("------------------------ 2D Acoustic RTI start ------------------------\n");
         }
 
-        //! Set model
-        geo.gvp2d = sjmflloc2d(sur.gnx, sur.gnz);
-        sjreadsuall(geo.gvp2d[0], sur.gnx, sur.gnz, geo.vpfile);
+        opt.maxshift = 200;
 
-        //! Process migration
-        geo.ggzz2d = sjmflloc2d(sur.gnx, sur.gnz);
+        //! Allocate memory
         float **g0 = sjmflloc2d(sur.gnx, sur.gnz);
         float **cg = sjmflloc2d(sur.gnx, sur.gnz);
+        geo.gvp2d = sjmflloc2d(sur.gnx, sur.gnz);
+        geo.ggzz2d = sjmflloc2d(sur.gnx, sur.gnz);
+        geo.gizz2d = sjmflloc2d(sur.gnx, sur.gnz);
+
+        //! Read model
+        sjveczerof(geo.gvp2d[0], sur.gnx * sur.gnz);
+        sjreadsuall(geo.gvp2d[0], sur.gnx, sur.gnz, geo.vpfile);
 
         //! Inversion
         do {
-            //! Calculate gradient
-            opt.ystacksrc = 1;
-            sjafwig2d(&sur, &geo, &wav, &opt);
+            //! Calculate RTM image
+            sjartm2d(&sur, &geo, &wav, &opt);
+
+            //! Calculate RTI gradient
+            sjveczerof(geo.ggzz2d[0], sur.gnx * sur.gnz);
+            sjartig2d(&sur, &geo, &wav, &opt);
 
             //! Optimization
             if (rankid == 0) {
+
+                int ix, iz;
+                float maxamp = 0.0;
+                for (ix = 0; ix < sur.gnx; ix++)
+                    for (iz = 0; iz < sur.gnz; iz++)
+                        if (fabs(geo.ggzz2d[ix][iz]) > maxamp)
+                            maxamp = fabs(geo.ggzz2d[ix][iz]);
+
+                for (ix = 0; ix < sur.gnx; ix++)
+                    for (iz = 0; iz < sur.gnz; iz++)
+                        geo.ggzz2d[ix][iz] = geo.ggzz2d[ix][iz] / maxamp * 10.0f;
+
                 //! CG
                 sjcgsolver(geo.gvp2d[0], sur.gnx * sur.gnz, cg[0], geo.ggzz2d[0], g0[0], iter);
+
                 //! Output details
-                if(opt.ydetails==1) {
+                if (opt.ydetails == 1) {
                     char *file = (char *) malloc(1024 * sizeof(char));
-                    sprintf(file, "%s-cg", geo.izzfile);
-                    sjwritesu(cg[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter,file);
+                    sprintf(file, "%s-izz", geo.izzfile);
+                    sjwritesu(geo.gizz2d[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter, file);
                     sprintf(file, "%s-vp", geo.izzfile);
-                    sjwritesu(geo.gvp2d[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter,file);
+                    sjwritesu(geo.gvp2d[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter, file);
+                    sprintf(file, "%s-cg", geo.izzfile);
+                    sjwritesu(cg[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter, file);
                 }
+
                 //! Information
                 Tend = (double) clock();
-                printf("Acoustic FWI complete - %2d/%2d - time=%6.2fs.\n",
+                printf("Acoustic RTI complete - %2d/%2d - time=%6.2fs.\n",
                        iter + 1, opt.niter, (Tend - Tstart) / CLOCKS_PER_SEC);
             }
+
             iter += 1;
+
         } while (iter < opt.niter);
 
-        //! Output
         if (rankid == 0) {
             sjwritesuall(geo.gvp2d[0], sur.gnx, sur.gnz, opt.ds, geo.izzfile);
-            printf("Acoustic FWI completed.\n\n");
+            printf("Acoustic RTI completed.\n\n");
         }
 
         sjmfree2d(geo.gvp2d);
         sjmfree2d(geo.ggzz2d);
-        sjmfree2d(g0);
+        sjmfree2d(geo.gizz2d);
         sjmfree2d(cg);
+        sjmfree2d(g0);
     } else {
         if (rankid == 0) {
-            printf("\nExamples:   sjmpiafwi2d survey=survey.su vp=vp.su recz=recz.su izz=final_vp.su\n");
+            printf("\nExamples:   sjmpiarti2d survey=survey.su vp=vp.su profz=profz.su izz=final_vp.su\n");
             sjbasicinformation();
         }
     }
@@ -105,5 +129,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-

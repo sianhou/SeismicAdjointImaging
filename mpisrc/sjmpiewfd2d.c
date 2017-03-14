@@ -130,7 +130,7 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        printf("\nExamples:   sjmpiewfd2d sur=sur.su vp=vp.su profz=profz.su nt=3001\n");
+        printf("\nExamples:   sjmpiewfd2d survey=survey.su vp=vp.su vs=vs.su profz=profz.su nt=3001\n");
         sjbasicinformation();
     }
 

@@ -25,14 +25,14 @@ $binpath/sjsurvey2d ns=37 nr=441 vel=$outpath/vp0.su x0=0 nx=460 dx0=0 sx0=50 sz
 # Simulation
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp0.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002
+mpirun -np $nthd $binpath/sjmpiawfd2d survey=$outpath/survey.su vp=$outpath/vp0.su profz=$outpath/recz.su nt=1500 k1=50 dt=0.002
 
 #-----------------------------------------------------------------------------
 # Inversion
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=vps.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 izz=$outpath/ipps.su
+mpirun -np $nthd $binpath/sjmpiarti2d survey=$outpath/survey.su vp=vps.su profz=$outpath/recz.su nt=1500 k1=50 dt=0.002 niter=100 ydetails=1 izz=$outpath/ipps.su
 
-# mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=vp0.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 ipp=$outpath/ipp0.su
+# mpirun -np $nthd $binpath/sjmpiarti2d survey=$outpath/survey.su vp=vp0.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 ipp=$outpath/ipp0.su
 
-# mpirun -np $nthd $binpath/sjmpiawti2d survey=$outpath/survey.su vp=vpf.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 ipp=$outpath/ippf.su
+# mpirun -np $nthd $binpath/sjmpiarti2d survey=$outpath/survey.su vp=vpf.su profz=$outpath/recz.su nt=2001 k1=200 dt=0.002 ipp=$outpath/ippf.su

@@ -42,8 +42,10 @@ void sjalsrtmfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt
 //! Two dimension constant density acoustic LSRTM backward exploration
 void sjalsrtmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
+//! Two dimension constant density acoustic RTI backward exploration
+void sjartibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
-//! Two dimension acoustic RTI backward exploration based on constant density equation
+//! Two dimension constant density acoustic WTI backward exploration
 void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
 
@@ -54,5 +56,8 @@ void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
 //! Two dimension constant density elastic forward exploration
 void sjefor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
+//! Two dimension constant density elastic forward exploration with SGFD
+void sjesgfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
 #endif //SJI_SJWAVE_H

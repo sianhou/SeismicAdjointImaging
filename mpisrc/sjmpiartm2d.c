@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
             sjmfree2d(geo.izz2d);
             sjmfree2d(geo.nzz2d);
             sjmfree2d(wav.profz);
-            sjmfree2d(wav.fwz2d);
+            sjmfree3d(wav.fwz2d);
 
             //! Time
             tend = (double) clock();

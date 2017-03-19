@@ -9,11 +9,11 @@ sjmpialstrm2d: 2d acoustic least square reverse time migration.
 
 sjmpiafwi2d: 2d acoustic full waveform inversion.
 
-sjmpiefd2d: 2d elastic simulation.
+sjmpiewfd2d: 2d elastic simulation.
 
-sjmpiesgfd2d: 2d elastic simulation with displacement-stress equation.
+sjmpiewsgfd2d: 2d elastic simulation with displacement-stress equation.
 
-sjmpievssgfd2d: 2d elastic simulation with velocity-stress equation.
+sjmpiewvssgfd2d: 2d elastic simulation with velocity-stress equation.
 
 Author: Hou, Sian - sianhou1987@outlook.com / China University of Petroleum-Beijing
 

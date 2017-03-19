@@ -1,20 +1,24 @@
 # Seismic Adjoint Imaging
-This is a small program to perform seismic finite difference simulation and adjoint imaging.
+This is a small program to perform seismic finite difference simulation and adjoint imaging with Linux and MPI.
 
-Now, we have 2d aoucstic finite difference modeling, rtm, fwi and lsrtm. We hope to update traveltime inversion in future.
+sjmpiawfd2d: 2d acoustic simulation.
 
-To run our programs you should edit make.inc to set the compiler and use "make all" to install.
+sjmpiartm2d: 2d acoustic reverse time migration.
 
-You can see the instruction of each program when run it without parameters.
+sjmpialstrm2d: 2d acoustic least square reverse time migration.
 
-If you have any problem, contact me by E-mail, sianhou1987@outlook.com, freely.
+sjmpiafwi2d: 2d acoustic full waveform inversion.
+
+sjmpiefd2d: 2d elastic simulation.
+
+sjmpiesgfd2d: 2d elastic simulation with displacement-stress equation.
+
+sjmpievssgfd2d: 2d elastic simulation with velocity-stress equation.
+
+Author: Hou, Sian - sianhou1987@outlook.com / China University of Petroleum-Beijing
+
+Author: Wang, Guangchao - wgcupc@163.com / China University of Petroleum-Beijing
+
+Lots of problem need to be solved now, so email us if you have any question and advise!
 
 Best wishes!
-
-Problems:
-
-We are developing imaging domain inversion now;
-
-We hope to add denstiy equation;
-
-We hope to improve elastic simulation: improve dxdz; improve source;

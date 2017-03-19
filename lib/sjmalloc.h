@@ -55,8 +55,4 @@ void sjcheckfree3d(void ***p);
 #define sjmfree2d(p) sjfree2d((void **) p)
 #define sjmfree3d(p) sjfree3d((void ***) p)
 
-#define sjmcheckfree1d(p) sjcheckfree1d((void *) p); p=NULL;
-#define sjmcheckfree2d(p) sjcheckfree2d((void **) p); p=NULL;
-#define sjmcheckfree3d(p) sjcheckfree3d((void ***) p); p=NULL;
-
 #endif //SJI_SJMALLOC_H

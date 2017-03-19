@@ -88,4 +88,9 @@ if ( MPI_FOUND )
     add_executable(sjmpiewsgfd2d ${SOURCEFILE} ${SJINC})
     target_link_libraries(sjmpiewsgfd2d mpisj m)
 
+    #! sjmpiewvssgfd2d
+    set(SOURCEFILE mpisrc/sjmpiewvssgfd2d.c)
+    add_executable(sjmpiewvssgfd2d ${SOURCEFILE} ${SJINC})
+    target_link_libraries(sjmpiewvssgfd2d mpisj m)
+
 endif( MPI_FOUND )

@@ -54,11 +54,11 @@ void sjartm2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecaddf(&geo->gnzz2d[sur->x0][sur->z0], sur->nx * sur->nz, 1.0f, &geo->gnzz2d[sur->x0][sur->z0], 1.0f,
                   &geo->nzz2d[0][0]);
         //! Free
-        sjmcheckfree2d(geo->vp2d);
-        sjmcheckfree2d(geo->izz2d);
-        sjmcheckfree2d(geo->nzz2d);
-        sjmcheckfree2d(wav->profz);
-        sjmcheckfree3d(wav->fwz2d);
+        sjmfree2d(geo->vp2d);
+        sjmfree2d(geo->izz2d);
+        sjmfree2d(geo->nzz2d);
+        sjmfree2d(wav->profz);
+        sjmfree3d(wav->fwz2d);
         //! Informaiton
         if (rankid == 0) {
             tend = (double) clock();
@@ -90,7 +90,7 @@ void sjartm2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
     }
 
     //! Free
-    sjmcheckfree2d(geo->gnzz2d);
+    sjmfree2d(geo->gnzz2d);
 }
 
 //! Two dimension constant density acoustic Time-Shift RTM
@@ -234,12 +234,12 @@ void sjafwig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecaddf(geo->gnzz2d[sur->x0], sur->nx * sur->nz, 1.0f, geo->gnzz2d[sur->x0], 1.0f, geo->nzz2d[0]);
 
         //! Free
-        sjmcheckfree2d(geo->vp2d);
-        sjmcheckfree2d(wav->profz);
-        sjmcheckfree2d(geo->gzz2d);
-        sjmcheckfree2d(geo->nzz2d);
-        sjmcheckfree2d(recz);
-        sjmcheckfree3d(wav->fwz2d);
+        sjmfree2d(geo->vp2d);
+        sjmfree2d(wav->profz);
+        sjmfree2d(geo->gzz2d);
+        sjmfree2d(geo->nzz2d);
+        sjmfree2d(recz);
+        sjmfree3d(wav->fwz2d);
 
         //! Informaiton
         if (rankid == 0) {
@@ -274,7 +274,7 @@ void sjafwig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         MPI_Reduce(geo->gnzz2d[0], geo->gnzz2d[0], sur->gnx * sur->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     }
 
-    sjmcheckfree2d(geo->gnzz2d);
+    sjmfree2d(geo->gnzz2d);
 }
 
 //! Two dimension constant density acoustic LSRTM gradient
@@ -332,13 +332,13 @@ void sjalsrtmg2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         sjvecaddf(geo->gnzz2d[sur->x0], sur->nx * sur->nz, 1.0f, geo->gnzz2d[sur->x0], 1.0f, geo->nzz2d[0]);
 
         //! Free
-        sjmcheckfree2d(geo->vp2d);
-        sjmcheckfree2d(geo->izz2d);
-        sjmcheckfree2d(geo->gzz2d);
-        sjmcheckfree2d(geo->nzz2d);
-        sjmcheckfree2d(wav->profz);
-        sjmcheckfree2d(recz);
-        sjmcheckfree3d(wav->fwz2d);
+        sjmfree2d(geo->vp2d);
+        sjmfree2d(geo->izz2d);
+        sjmfree2d(geo->gzz2d);
+        sjmfree2d(geo->nzz2d);
+        sjmfree2d(wav->profz);
+        sjmfree2d(recz);
+        sjmfree3d(wav->fwz2d);
 
         //! Informaiton
         if (rankid == 0) {
@@ -373,7 +373,7 @@ void sjalsrtmg2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         MPI_Reduce(geo->gnzz2d[0], geo->gnzz2d[0], sur->gnx * sur->gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);
     }
 
-    sjmcheckfree2d(geo->gnzz2d);
+    sjmfree2d(geo->gnzz2d);
 }
 
 //! Two dimension constant density acoustic RTI sfhit

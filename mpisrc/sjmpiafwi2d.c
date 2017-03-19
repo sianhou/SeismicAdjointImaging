@@ -1,6 +1,5 @@
-//
-// Authors: Guanchao Wang, Sian Hou
-//
+// Authors: Wang, Guangchao - wgcupc@163.com
+//          Hou, Sian - sianhou1987@outlook.com
 
 #include <mpi.h>
 #include "sjimage.h"

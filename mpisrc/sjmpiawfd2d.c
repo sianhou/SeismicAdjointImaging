@@ -1,6 +1,6 @@
 //
-// Created by hsa on 16/12/16.
-//
+// Authors: Hou, Sian - sianhou1987@outlook.com
+//          Wang, Guangchao - wgcupc@163.com
 
 #include <mpi.h>
 #include "../lib/sjinc.h"
@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
                 tend = (double) clock();
                 printf("Single shot simulation complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                        (tend - tstart) / CLOCKS_PER_SEC);
-                printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
+                printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n", rankid,
                        sur.sx + sur.x0, sur.sz + sur.z0,
                        sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                        sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
@@ -83,8 +83,7 @@ int main(int argc, char *argv[]) {
                     if ((is + mpiid) < sur.ns) {
                         MPI_Recv(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
-                        sjwritesu(wav.profz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid,
-                                  wav.profzfile);
+                        sjwritesu(wav.profz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid, wav.profzfile);
                     }
             } else {
                 MPI_Send(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);
@@ -98,15 +97,18 @@ int main(int argc, char *argv[]) {
             }
 
             //! Free
-            sjcheckfree2d((void **) geo.vp2d);
-            sjcheckfree2d((void **) wav.profz);
-            sjcheckfree3d((void ***) wav.fwz2d);
+            sjmfree2d(geo.vp2d);
+            sjmfree2d(wav.profz);
+            sjmfree3d(wav.fwz2d);
         }
+
+        //! Free Global Memory
+        sjmfree2d(geo.gvp2d);
 
         //------------------------ Information ------------------------//
         if (rankid == 0) {
             Tend = (double) clock();
-            printf("2D acoustic simulation complete - time=%fs.\n\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
+            printf("2D acoustic simulation complete - time=%fs.\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
         }
 
     } else {

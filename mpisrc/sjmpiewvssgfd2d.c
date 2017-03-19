@@ -74,7 +74,7 @@ int main(int argc, char *argv[]) {
             wav.fwz2d = (float ***) sjalloc3d(opt.nsnap, sur.nx, sur.nz, sizeof(float));
 
             //! Simulation
-            sjesgfor2d(&sur, &geo, &wav, &opt);
+            sjevssgfor2d(&sur, &geo, &wav, &opt);
 
             //! Output
             if (rankid == 0) {
@@ -128,7 +128,7 @@ int main(int argc, char *argv[]) {
         }
 
     } else {
-        printf("\nExamples:   sjmpiewsgfd2d survey=survey.su vp=vp.su vs=vs.su profz=profz.su nt=3001\n");
+        printf("\nExamples:   sjmpiewvssgfd2d survey=survey.su vp=vp.su vs=vs.su profx=profx.su profz=profz.su nt=3001\n");
         sjbasicinformation();
     }
 

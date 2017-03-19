@@ -1,6 +1,4 @@
-//
-// Created by hsa on 07/01/17.
-//
+// Author: Hou, Sian - sianhou1987@outlook.com
 
 #ifndef SJI_SJWAVE_H
 #define SJI_SJWAVE_H
@@ -49,7 +47,6 @@ void sjartibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 void sjawtibac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
 
-
 /**********************************************************************************************/
 /* ! Elastic                                                                                  */
 /**********************************************************************************************/
@@ -60,4 +57,6 @@ void sjefor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 //! Two dimension constant density elastic forward exploration with SGFD
 void sjesgfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
+//! Two dimension constant density elastic forward exploration with V-S SGFD
+void sjevssgfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 #endif //SJI_SJWAVE_H

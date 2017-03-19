@@ -1,6 +1,4 @@
-//
-// Created by hsa on 07/01/17.
-//
+// Author: Hou, Sian - sianhou1987@outlook.com
 
 #include "sjwave.h"
 #include "sjinc.h"
@@ -1625,4 +1623,234 @@ void sjesgfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
     sjmfree2d(txx);
     sjmfree2d(tzz);
     sjmfree2d(txz);
+}
+
+//! Two dimension constant density elastic forward exploration with V-S SGFD
+void sjevssgfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
+
+    //------------------------ Runtime ------------------------//
+    int it, ir, ix, iz;
+    const int marg = 6;
+
+    //------------------------ Option ------------------------//
+    int nt = opt->nt;
+    int k1 = opt->k1;
+    int jsnap = opt->jsnap;
+    int srcrange = opt->srcrange;
+    float dt = opt->dt;
+    float fp = opt->fp;
+    float amp = opt->amp;
+    float srcdecay = opt->srcdecay;
+    int nb = opt->nb;
+    float ds = opt->ds;
+    int ycutdirect = opt->ycutdirect;
+    float *wavelet = sjmflloc1d(nt);
+    sjricker1d(wavelet, nt, k1, dt, fp, amp);
+
+    //------------------------ Survey ------------------------//
+    int nx = sur->nx;
+    int nz = sur->nz;
+    int sx = sur->sx + nb + marg;
+    int sz = sur->sz + nb + marg;
+    int nr = sur->nr;
+    int *rx = sur->rx;
+    int *rz = sur->rz;
+
+    //------------------------ Model ------------------------//
+    int nxb = nx + 2 * marg + 2 * nb;
+    int nzb = nz + 2 * marg + 2 * nb;
+    float ids = dt / ds;
+    float **cp = sjmflloc2d(nxb, nzb);
+    float **cs = sjmflloc2d(nxb, nzb);
+    sjextend2d(cp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vp2d);
+    sjextend2d(cs, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vs2d);
+
+    //------------------------ Boundary condition ------------------------//
+    float **gxl = sjmflloc2d(nzb, 3);
+    float **gxr = sjmflloc2d(nzb, 3);
+    float **gzu = sjmflloc2d(nxb, 3);
+    float **gzb = sjmflloc2d(nxb, 3);
+
+    //------------------------ Wavefield ------------------------//
+    float **vx0 = sjmflloc2d(nxb, nzb);
+    float **vx1 = sjmflloc2d(nxb, nzb);
+    float **vz0 = sjmflloc2d(nxb, nzb);
+    float **vz1 = sjmflloc2d(nxb, nzb);
+    float **txx0 = sjmflloc2d(nxb, nzb);
+    float **txx1 = sjmflloc2d(nxb, nzb);
+    float **tzz0 = sjmflloc2d(nxb, nzb);
+    float **tzz1 = sjmflloc2d(nxb, nzb);
+    float **txz0 = sjmflloc2d(nxb, nzb);
+    float **txz1 = sjmflloc2d(nxb, nzb);
+
+    //------------------------ Initialization ------------------------//
+    //! Boundary condition
+    sjinitohabc2d(cp, cs, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+    //! Model
+    sjvecmulf(cp[0], nxb * nzb, 1.0f / ds, cp[0], cp[0]);
+    sjvecmulf(cs[0], nxb * nzb, 1.0f / ds, cs[0], cs[0]);
+    //! Wavefield
+    sjveczerof(vx0[0], nxb * nzb);
+    sjveczerof(vx1[0], nxb * nzb);
+    sjveczerof(vz0[0], nxb * nzb);
+    sjveczerof(vz1[0], nxb * nzb);
+    sjveczerof(txx0[0], nxb * nzb);
+    sjveczerof(txx1[0], nxb * nzb);
+    sjveczerof(tzz0[0], nxb * nzb);
+    sjveczerof(tzz1[0], nxb * nzb);
+    sjveczerof(txz0[0], nxb * nzb);
+    sjveczerof(txz1[0], nxb * nzb);
+
+    //------------------------ Wavefield exploration ------------------------//
+    for (it = 0; it < nt; it++) {
+
+        //! Source
+        for (ix = -srcrange; ix <= srcrange; ix++)
+            for (iz = -srcrange; iz <= srcrange; iz++) {
+                txx0[ix + sx][iz + sz] += wavelet[it] * expf(-srcdecay * (ix * ix + iz * iz));
+                tzz0[ix + sx][iz + sz] += wavelet[it] * expf(-srcdecay * (ix * ix + iz * iz));
+            }
+
+        //! Calculate vx and vz
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++) {
+                vx1[ix][iz] = (sjmsgfd2dn1(txz0, ix, iz - 1) + sjmsgfd2dn2(txx0, ix, iz)) * ids + vx0[ix][iz];
+                vz1[ix][iz] = (sjmsgfd2dn1(tzz0, ix, iz) + sjmsgfd2dn2(txz0, ix - 1, iz)) * ids + vz0[ix][iz];
+            }
+
+        //! Calculate txx, tzz and txz
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++) {
+                txx1[ix][iz] = cp[ix][iz] * sjmsgfd2dn2(vx1, ix - 1, iz) +
+                               (cp[ix][iz] - 2.0f * cs[ix][iz]) * sjmsgfd2dn1(vz1, ix, iz - 1) + txx0[ix][iz];
+                tzz1[ix][iz] = cp[ix][iz] * sjmsgfd2dn1(vz1, ix, iz - 1) +
+                               (cp[ix][iz] - 2.0f * cs[ix][iz]) * sjmsgfd2dn2(vx1, ix - 1, iz) + tzz0[ix][iz];
+                txz1[ix][iz] = cs[ix][iz] * (sjmsgfd2dn1(vx1, ix, iz) + sjmsgfd2dn2(vz1, ix, iz)) + txz0[ix][iz];
+            }
+
+        //! Boundary condition
+        //sjapplyohabc2d(vx1, vx0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+        //sjapplyohabc2d(vz1, vz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+        //sjapplyohabc2d(txx1, txx0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+        //sjapplyohabc2d(tzz1, tzz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+        //sjapplyohabc2d(txz1, txz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+        //! Record
+        for (ir = 0; ir < nr; ir++) {
+            wav->profx[ir][it] = vx1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+            wav->profz[ir][it] = vz1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+        }
+
+        //! Wavefield
+        if ((it % jsnap) == 0)
+            for (ix = nb + marg; ix < nxb - nb - marg; ix++)
+                for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
+                    wav->fwx2d[it / jsnap][ix - nb - marg][iz - nb - marg] = vx1[ix][iz];
+                    wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] = vz1[ix][iz];
+                }
+
+        //! Update
+        memcpy(vx0[0], vx1[0], nxb * nzb * sizeof(float));
+        memcpy(vz0[0], vz1[0], nxb * nzb * sizeof(float));
+        memcpy(txx0[0], txx1[0], nxb * nzb * sizeof(float));
+        memcpy(tzz0[0], tzz1[0], nxb * nzb * sizeof(float));
+        memcpy(txz0[0], txz1[0], nxb * nzb * sizeof(float));
+    }
+
+    //------------------------ Cut direct wav ------------------------//
+    if (ycutdirect == 1) {
+        //------------------------ Model ------------------------//
+        for (ix = 0; ix < nxb; ix++)
+            for (iz = 0; iz < nzb; iz++) {
+                cp[ix][iz] = geo->vp2d[sx - marg - nb][sz - marg - nb];
+                cs[ix][iz] = geo->vs2d[sx - marg - nb][sz - marg - nb];
+            }
+
+        //------------------------ Initialization ------------------------//
+        //! Boundary condition
+        sjinitohabc2d(cp, cs, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+        //! Model
+        sjvecmulf(cp[0], nxb * nzb, 1.0f / ds, cp[0], cp[0]);
+        sjvecmulf(cs[0], nxb * nzb, 1.0f / ds, cs[0], cs[0]);
+        //! Wavefield
+        sjveczerof(vx0[0], nxb * nzb);
+        sjveczerof(vx1[0], nxb * nzb);
+        sjveczerof(vz0[0], nxb * nzb);
+        sjveczerof(vz1[0], nxb * nzb);
+        sjveczerof(txx0[0], nxb * nzb);
+        sjveczerof(txx1[0], nxb * nzb);
+        sjveczerof(tzz0[0], nxb * nzb);
+        sjveczerof(tzz1[0], nxb * nzb);
+        sjveczerof(txz0[0], nxb * nzb);
+        sjveczerof(txz1[0], nxb * nzb);
+
+        //------------------------ Wavefield exploration ------------------------//
+        for (it = 0; it < nt; it++) {
+
+            //! Source
+            for (ix = -srcrange; ix <= srcrange; ix++)
+                for (iz = -srcrange; iz <= srcrange; iz++) {
+                    txx0[ix + sx][iz + sz] += wavelet[it] * expf(-srcdecay * (ix * ix + iz * iz));
+                    tzz0[ix + sx][iz + sz] += wavelet[it] * expf(-srcdecay * (ix * ix + iz * iz));
+                }
+
+            //! Calculate vx and vz
+            for (ix = marg; ix < nxb - marg; ix++)
+                for (iz = marg; iz < nzb - marg; iz++) {
+                    vx1[ix][iz] = (sjmsgfd2dn1(txz0, ix, iz - 1) + sjmsgfd2dn2(txx0, ix, iz)) * ids + vx0[ix][iz];
+                    vz1[ix][iz] = (sjmsgfd2dn1(tzz0, ix, iz) + sjmsgfd2dn2(txz0, ix - 1, iz)) * ids + vz0[ix][iz];
+                }
+
+            //! Calculate txx, tzz and txz
+            for (ix = marg; ix < nxb - marg; ix++)
+                for (iz = marg; iz < nzb - marg; iz++) {
+                    txx1[ix][iz] = cp[ix][iz] * sjmsgfd2dn2(vx1, ix - 1, iz) +
+                                   (cp[ix][iz] - 2.0f * cs[ix][iz]) * sjmsgfd2dn1(vz1, ix, iz - 1) + txx0[ix][iz];
+                    tzz1[ix][iz] = cp[ix][iz] * sjmsgfd2dn1(vz1, ix, iz - 1) +
+                                   (cp[ix][iz] - 2.0f * cs[ix][iz]) * sjmsgfd2dn2(vx1, ix - 1, iz) + tzz0[ix][iz];
+                    txz1[ix][iz] = cs[ix][iz] * (sjmsgfd2dn1(vx1, ix, iz) + sjmsgfd2dn2(vz1, ix, iz)) + txz0[ix][iz];
+                }
+
+            //! Boundary condition
+            //sjapplyohabc2d(vx1, vx0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+            //sjapplyohabc2d(vz1, vz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+            //sjapplyohabc2d(txx1, txx0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+            //sjapplyohabc2d(tzz1, tzz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+            //sjapplyohabc2d(txz1, txz0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+            //! Record
+            for (ir = 0; ir < nr; ir++) {
+                wav->profx[ir][it] -= vx1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+                wav->profz[ir][it] -= vz1[nb + marg + rx[ir]][nb + marg + rz[ir]];
+            }
+
+            //! Update
+            memcpy(vx0[0], vx1[0], nxb * nzb * sizeof(float));
+            memcpy(vz0[0], vz1[0], nxb * nzb * sizeof(float));
+            memcpy(txx0[0], txx1[0], nxb * nzb * sizeof(float));
+            memcpy(tzz0[0], tzz1[0], nxb * nzb * sizeof(float));
+            memcpy(txz0[0], txz1[0], nxb * nzb * sizeof(float));
+        }
+    }
+
+    sjmfree1d(wavelet);
+
+    sjmfree2d(cp);
+    sjmfree2d(cs);
+
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
+
+    sjmfree2d(vx0);
+    sjmfree2d(vx1);
+    sjmfree2d(vz0);
+    sjmfree2d(vz1);
+    sjmfree2d(txx0);
+    sjmfree2d(txx1);
+    sjmfree2d(tzz0);
+    sjmfree2d(tzz1);
+    sjmfree2d(txz0);
+    sjmfree2d(txz1);
 }

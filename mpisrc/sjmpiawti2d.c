@@ -1,6 +1,6 @@
 //
-// Created by hsa on 12/01/17.
-//
+// Authors: Hou, Sian - sianhou1987@outlook.com
+//          Wang, Guangchao - wgcupc@163.com
 
 #include <mpi.h>
 #include "sjimage.h"

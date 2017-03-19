@@ -1,6 +1,6 @@
 //
-// Created by hsa on 12/03/17.
-//
+// Authors: Hou, Sian - sianhou1987@outlook.com
+//          Wang, Guangchao - wgcupc@163.com
 
 #ifndef SJI_SJIMAGE_H
 #define SJI_SJIMAGE_H

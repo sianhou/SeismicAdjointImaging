@@ -1,6 +1,4 @@
-//
-// Created by hsa on 07/12/16.
-//
+// Author: Hou, Sian - sianhou1987@outlook.com
 
 #ifndef SJI_SJINC_H
 #define SJI_SJINC_H

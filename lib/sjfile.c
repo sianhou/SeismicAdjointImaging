@@ -1,6 +1,4 @@
-//
-// Created by hsa on 09/12/16.
-//
+// Author: Hou, Sian - sianhou1987@outlook.com
 
 #include "sjfile.h"
 #include "sjinc.h"
@@ -8,8 +6,8 @@
 //! Show information
 void sjbasicinformation() {
     printf("\n");
-    printf("Author:     Hou, Sian\n");
-    printf("E-mail:     sianhou1987@outlook.com\n");
+    printf("Author:     Hou, Sian - sianhou1987@outlook.com\n");
+    printf("Author:     Wang, Guanchao - wgcupc@163.com\n");
     printf("Website:    https://github.com/housian1987/SeismicAdjointModeling\n");
     exit(0);
 }

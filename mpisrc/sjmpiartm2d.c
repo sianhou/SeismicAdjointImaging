@@ -1,6 +1,6 @@
 //
-// Created by hsa on 12/12/16.
-//
+// Authors: Hou, Sian - sianhou1987@outlook.com
+//          Wang, Guangchao - wgcupc@163.com
 
 #include "../lib/sjinc.h"
 #include <mpi.h>
@@ -98,7 +98,7 @@ int main(int argc, char *argv[]) {
             tend = (double) clock();
             printf("Single shot RTM complete - %d/%d - time=%fs.\n", is + 1, sur.ns,
                    (tend - tstart) / CLOCKS_PER_SEC);
-            printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n\n", rankid,
+            printf("Rankid=%d, sx=%d, sz=%d, rx=%d to %d, rz=%d to %d.\n", rankid,
                    sur.sx + sur.x0, sur.sz + sur.z0,
                    sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                    sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
@@ -119,7 +119,7 @@ int main(int argc, char *argv[]) {
 
             //! Time
             Tend = (double) clock();
-            printf("Acoustic RTM complete - time=%fs.\n\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
+            printf("Acoustic RTM complete - time=%fs.\n\n", (Tend - Tstart) / CLOCKS_PER_SEC);
         } else {
             //! Reduce
             MPI_Reduce(geo.gizz2d[0], geo.gizz2d[0], sur.gnx * sur.gnz, MPI_FLOAT, MPI_SUM, 0, MPI_COMM_WORLD);

@@ -2,7 +2,7 @@
 
 binpath=../../../bin
 outpath=.
-nthd=30
+nthd=4
 
 #-----------------------------------------------------------------------------
 # Convert binary
@@ -32,5 +32,5 @@ mpirun -np $nthd $binpath/sjmpiartm2d survey=$outpath/survey.su vp=$outpath/vp.s
 # LSRTM
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpilsartm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002 niter=50 ydetails=1 izz=$outpath/lsmig.su
+mpirun -np $nthd $binpath/sjmpialsrtm2d survey=$outpath/survey.su vp=$outpath/vp.su profz=$outpath/recz.su nt=1251 dt=0.002 niter=50 ydetails=1 izz=$outpath/lsmig.su
 

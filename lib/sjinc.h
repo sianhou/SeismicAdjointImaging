@@ -604,5 +604,6 @@ typedef struct {
 #include "sjmalloc.h"
 #include "sjmath.h"
 #include "sjwave.h"
+#include "sjenvelopemisfit.h"
 
 #endif //SJI_SJINC_H

@@ -76,7 +76,7 @@ int main(int argc, char *argv[]) {
                 }
                 //! Information
                 Tend = (double) clock();
-                printf("Acoustic FWI complete - %2d/%2d - time=%6.2fs.\n",
+                printf("Acoustic EI complete - %2d/%2d - time=%6.2fs.\n",
                        iter + 1, opt.niter, (Tend - Tstart) / CLOCKS_PER_SEC);
             }
             iter += 1;

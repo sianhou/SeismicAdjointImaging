@@ -260,7 +260,7 @@ void sjafwig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
+        // sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
 
         //! Information
         tend = (double) clock();
@@ -359,7 +359,7 @@ void sjaeig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
+        // sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
 
         //! Information
         tend = (double) clock();

@@ -71,10 +71,16 @@ int main(int argc, char *argv[]) {
             //! Optimization
             if (rankid == 0) {
                 //! CG
-                sjcgsolver(geo.gizz2d[0], sur.gnx * sur.gnz, cg[0], geo.ggzz2d[0], g0[0], iter);
+		if (iter == 0) {
+		    sjvecaddf(cg[0], sur.gnx * sur.gnz, -1.0f, geo.ggzz2d[0], 0.0f, cg[0]);
+		    memcpy(g0[0], geo.ggzz2d[0], sur.gnx * sur.gnz * sizeof(float));
+		    sjvecaddf(geo.gizz2d[0], sur.gnx * sur.gnz, 1.0f, geo.gizz2d[0], 0.0001f, cg[0]);
+		} else {
+                    sjcgsolver(geo.gizz2d[0], sur.gnx * sur.gnz, cg[0], geo.ggzz2d[0], g0[0], iter);
+		}
 
                 //! Output details
-                if(opt.ydetails==1) {
+                if (opt.ydetails==1) {
                     char *file = (char *) malloc(1024 * sizeof(char));
                     sprintf(file, "%s-cg", geo.izzfile);
                     sjwritesu(cg[0], sur.gnx, sur.gnz, sizeof(float), opt.ds, iter,file);

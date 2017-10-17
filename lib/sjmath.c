@@ -126,6 +126,7 @@ void sjcgdirection(float *d, int n, float *g1, float *g0, int iter) {
 float sjcglength(int n, float *s, float *x, float err, int iter) {
     //! by Guanchao wang
     int index_s, index_x;
+    /*
     if (iter == 0) {
         return 0.0001f;
     } else {
@@ -133,6 +134,10 @@ float sjcglength(int n, float *s, float *x, float err, int iter) {
         index_x = sjfindabsmaxf(x, n);
         return err * fabsf(x[index_x]) / fabsf(s[index_s]);
     }
+    */
+    index_s = sjfindabsmaxf(s, n);
+    index_x = sjfindabsmaxf(x, n);
+    return err * fabsf(x[index_x]) / fabsf(s[index_s]);
 }
 
 float sjcgbeta(int n, float *cg, float *g1, float *g0, int iter) {
@@ -170,7 +175,7 @@ void sjcgsolver(float *z, int n, float *cg, float *g1, float *g0, int iter) {
     memcpy(g0, g1, n * sizeof(float));
 
     //! Calculate CG step size
-    alpha = sjcglength(n, cg, z, 0.1, iter);
+    alpha = sjcglength(n, cg, z, 0.01, iter);
 
     //! Update model
     sjvecaddf(z, n, 1.0f, z, alpha, cg);

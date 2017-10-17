@@ -260,7 +260,7 @@ void sjafwig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        // sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
+        sjsetsurface(geo->ggzz2d, sur->gnx, 20, 0.0);
 
         //! Information
         tend = (double) clock();
@@ -322,7 +322,7 @@ void sjaeig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
         //! Difference wavefield
         sjreadsu(recz[0], sur->nr, opt->nt, sizeof(float), sur->tr, 0, wav->profzfile);
-        sjmisfit_evelope(csyn, recz, wav->profz, opt->nt, sur->nr, 2);
+        sjmisfit_evelope(recz, csyn, wav->profz, opt->nt, sur->nr, 2);
 
         //! Adjoint image
         sjafwibac2d(sur, geo, wav, opt);
@@ -359,7 +359,7 @@ void sjaeig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        // sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
+        sjsetsurface(geo->ggzz2d, sur->gnx, 20, 0.0);
 
         //! Information
         tend = (double) clock();

@@ -34,5 +34,7 @@ mpirun -np $nthd $binpath/sjmpiaei2d  survey=$outpath/survey.su vp=$outpath/mar_
 # AFWI
 #-----------------------------------------------------------------------------
 
-mpirun -np $nthd $binpath/sjmpiafwi2d survey=$outpath/survey.su vp=$outpath/ei_result.su profz=$outpath/recz.su nt=2501 dt=0.001 fp=5 k1=151 ycutdirect=0 jsnap=1 niter=20 ydetails=1 izz=$outpath/fwi_result.su amp=100000.0
+mpirun -np $nthd $binpath/sjmpiafwi2d survey=$outpath/survey.su vp=$outpath/mar_init.su profz=$outpath/recz.su nt=2501 dt=0.001 fp=5 k1=151 ycutdirect=0 jsnap=1 niter=20 ydetails=1 izz=$outpath/fwi_result.su amp=100000.0
+
+mpirun -np $nthd $binpath/sjmpiafwi2d survey=$outpath/survey.su vp=$outpath/ei_result.su profz=$outpath/recz.su nt=2501 dt=0.001 fp=5 k1=151 ycutdirect=0 jsnap=1 niter=20 ydetails=1 izz=$outpath/ei_fwi_result.su amp=100000.0
 

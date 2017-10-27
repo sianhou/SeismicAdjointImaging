@@ -28,6 +28,9 @@ void sjasfor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 //! Two dimension constant density acoustic RTM backward exploration
 void sjartmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 
+//! Two dimension constant density acoustic illumation exploration
+void sjaillumation2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
+
 //! Two dimension constant density acoustic Time-Shift RTM backward exploration
 void sjatsrtmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt);
 

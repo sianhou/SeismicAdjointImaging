@@ -93,6 +93,11 @@ int main(int argc, char *argv[]) {
                 printf("Acoustic LSRTM complete - %2d/%2d - time=%6.2fs.\n",
                        iter + 1, opt.niter, (Tend - Tstart) / CLOCKS_PER_SEC);
             }
+           
+            //! Reset memory
+            sjmfree2d(geo.ggzz2d);
+            geo.ggzz2d = sjmflloc2d(sur.gnx, sur.gnz);
+
             iter += 1;
         } while (iter < opt.niter);
 

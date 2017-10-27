@@ -79,6 +79,10 @@ int main(int argc, char *argv[]) {
                 printf("Acoustic EI complete - %2d/%2d - time=%6.2fs.\n",
                        iter + 1, opt.niter, (Tend - Tstart) / CLOCKS_PER_SEC);
             }
+	   
+            // Reset gradient
+	    memset(geo.ggzz2d[0], 0, sur.gnx * sur.gnz * sizeof(float));
+
             iter += 1;
         } while (iter < opt.niter);
 

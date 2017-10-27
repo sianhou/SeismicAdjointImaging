@@ -528,6 +528,104 @@ void sjartmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
     sjmfree2d(p2);
 }
 
+//! Two dimension constant density acoustic illumation exploration
+void sjaillumation2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
+
+    //! Runtime
+    int it, ir, ix, iz;
+    const int marg = 6;
+
+    //! Option
+    int nt = opt->nt;
+    int jsnap = opt->jsnap;
+    float dt = opt->dt;
+    float dt2 = opt->dt * opt->dt;
+    int nb = opt->nb;
+    float ds = opt->ds;
+
+    //! Survey
+    int nx = sur->nx;
+    int nz = sur->nz;
+    int nr = sur->nr;
+    int *rx = sur->rx;
+    int *rz = sur->rz;
+
+    //------------------------ Model ------------------------//
+    int nxb = nx + 2 * marg + 2 * nb;
+    int nzb = nz + 2 * marg + 2 * nb;
+    float ids2 = dt2 / ds / ds;
+    float **cp = sjmflloc2d(nxb, nzb);
+    sjextend2d(cp, nx, nz, nb + marg, nb + marg, nb + marg, nb + marg, geo->vp2d);
+
+    //------------------------ Boundary condition ------------------------//
+    float **gxl = sjmflloc2d(nzb, 8);
+    float **gxr = sjmflloc2d(nzb, 8);
+    float **gzu = sjmflloc2d(nxb, 8);
+    float **gzb = sjmflloc2d(nxb, 8);
+
+    //------------------------ Wavefield ------------------------//
+    float **p2 = sjmflloc2d(nxb, nzb);
+    float **p1 = sjmflloc2d(nxb, nzb);
+    float **p0 = sjmflloc2d(nxb, nzb);
+
+    //------------------------ Initialization ------------------------//
+    //! Boundary condition
+    sjinitthabc2d(cp, cp, ds, dt, nxb, nzb, gxl, gxr, gzu, gzb);
+    //! Model
+    sjvecmulf(cp[0], nxb * nzb, ids2, cp[0], cp[0]);
+    //! Wavefield
+    sjveczerof(p2[0], nxb * nzb);
+    sjveczerof(p1[0], nxb * nzb);
+    sjveczerof(p0[0], nxb * nzb);
+
+    //------------------------ Wavefield exploration ------------------------//
+    for (it = nt - 1; it >= 0; --it) {
+        //! Source#
+        if (opt->ystacksrc == 1) {
+            for (ir = 0; ir < nr; ir++)
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] += wav->profz[ir][it];
+        } else {
+            for (ir = 0; ir < nr; ir++)
+                p1[nb + marg + rx[ir]][nb + marg + rz[ir]] = wav->profz[ir][it];
+        }
+
+        //! Calculate velocity
+        for (ix = marg; ix < nxb - marg; ix++)
+            for (iz = marg; iz < nzb - marg; iz++)
+                p2[ix][iz] = cp[ix][iz] * (sjmfd2dn1(p1, ix, iz) + sjmfd2dn2(p1, ix, iz))
+                             + 2.0f * p1[ix][iz] - p0[ix][iz];
+
+        //! Boundary condition
+        sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+
+        //! Wavefield
+        if ((it % jsnap) == 0) {
+            for (ix = nb + marg; ix < nxb - nb - marg; ix++) {
+                for (iz = nb + marg; iz < nzb - nb - marg; iz++) {
+                    geo->izz2d[ix - nb - marg][iz - nb - marg] += wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg] 
+                                                                * wav->fwz2d[it / jsnap][ix - nb - marg][iz - nb - marg];
+                    geo->nzz2d[ix - nb - marg][iz - nb - marg] += p1[ix][iz] * p1[ix][iz];
+                }
+            }
+        }
+
+        //! Update
+        memcpy(p0[0], p1[0], nxb * nzb * sizeof(float));
+        memcpy(p1[0], p2[0], nxb * nzb * sizeof(float));
+    }
+
+    sjmfree2d(cp);
+
+    sjmfree2d(gxl);
+    sjmfree2d(gxr);
+    sjmfree2d(gzu);
+    sjmfree2d(gzb);
+
+    sjmfree2d(p0);
+    sjmfree2d(p1);
+    sjmfree2d(p2);
+}
+
 //! Two dimension constant density acoustic Time-Shift RTM backward exploration
 void sjatsrtmbac2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 

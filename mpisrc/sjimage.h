@@ -226,7 +226,9 @@ void sjafwig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjreadsu(recz[0], sur->nr, opt->nt, sizeof(float), sur->tr, 0, wav->profzfile);
         sjvecsubf(wav->profz[0], sur->nr * opt->nt, 1.0f, recz[0], 1.0f, wav->profz[0]);
 
-        //! Adjoint image
+        //! Adjoint image 
+	memset(geo->gzz2d[0], 0, sur->nx * sur->nz * sizeof(float));
+	memset(geo->nzz2d[0], 0, sur->nx * sur->nz * sizeof(float));
         sjafwibac2d(sur, geo, wav, opt);
 
         //! Stacking
@@ -260,7 +262,7 @@ void sjafwig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        sjsetsurface(geo->ggzz2d, sur->gnx, 20, 0.0);
+        sjsetsurface(geo->ggzz2d, sur->gnx, 34, 0.0);
 
         //! Information
         tend = (double) clock();
@@ -325,6 +327,8 @@ void sjaeig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjmisfit_evelope(recz, csyn, wav->profz, opt->nt, sur->nr, 2);
 
         //! Adjoint image
+	memset(geo->gzz2d[0], 0, sur->nx * sur->nz * sizeof(float));
+	memset(geo->nzz2d[0], 0, sur->nx * sur->nz * sizeof(float));
         sjafwibac2d(sur, geo, wav, opt);
 
         //! Stacking
@@ -359,7 +363,7 @@ void sjaeig2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        sjsetsurface(geo->ggzz2d, sur->gnx, 20, 0.0);
+        sjsetsurface(geo->ggzz2d, sur->gnx, 34, 0.0);
 
         //! Information
         tend = (double) clock();
@@ -458,7 +462,7 @@ void sjalsrtmg2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) 
         sjvecdivf(geo->ggzz2d[0], sur->gnx * sur->gnz, 1.0, geo->ggzz2d[0], geo->gnzz2d[0], 0.00001f);
 
         //! Cut source
-        sjsetsurface(geo->ggzz2d, sur->gnx, 30, 0.0);
+        sjsetsurface(geo->ggzz2d, sur->gnx, 34, 0.0);
 
         //! Information
         tend = (double) clock();

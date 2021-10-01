@@ -636,6 +636,7 @@ int sjsoption_init(sjsoption *ptr) {
     ptr->ds = -1.0f;
     ptr->ycutdirect = -1;
     ptr->ycalscatter = -1;
+    ptr->yfreebc = -1;
     ptr->ydetails = 0;
     ptr->niter = 20;
     ptr->rtmopt = 1; //! Normal image, 2 = keep wavefield
@@ -659,6 +660,7 @@ int sjsoption_display(sjsoption *ptr) {
     printf("  ds:          %f\n", ptr->ds);
     printf("  ycutdirect:  %d\n", ptr->ycutdirect);
     printf("  ycalscatter: %d\n", ptr->ycalscatter);
+    printf("  yfreebc:     %d\n", ptr->yfreebc);
     printf("  ydetails:    %d\n", ptr->ydetails);
     printf("  niter:       %d\n", ptr->niter);
     return 1;
@@ -683,6 +685,8 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
         printf("                                1: cut direct (default).\n");
         printf("  ycalscatter: Calculate scatter, 0: don't calculate (default);\n");
         printf("                                  1: calculate.\n");
+        printf("  yfreebc:     Use free surface, 0: don't use (default);\n");
+        printf("                                 1: use.\n");
         printf("  ydetails:    Output details,    0: don't output (default);\n");
         printf("                                  1: output.\n");
         printf("  niter:       Number of loop, default=20.\n");
@@ -706,6 +710,7 @@ int sjsoption_getparas(sjsoption *ptr, int argc, char **argv) {
         if (!sjmgetf("ds", ptr->ds)) ptr->ds = 10.0;
         if (!sjmgeti("ycutdirect", ptr->ycutdirect)) ptr->ycutdirect = 1;
         if (!sjmgeti("ycalscatter", ptr->ycalscatter)) ptr->ycalscatter = 0;
+        if (!sjmgeti("yfreebc", ptr->yfreebc)) ptr->yfreebc = 0;
         if (!sjmgeti("ydetails", ptr->ydetails)) ptr->ydetails = 0;
         if (!sjmgeti("niter", ptr->niter)) ptr->niter = 20;
         return 1;

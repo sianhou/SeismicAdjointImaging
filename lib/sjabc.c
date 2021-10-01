@@ -367,3 +367,16 @@ int sjapplythabc2d(float **fp, float **cp, float **pp, float **gxl, float **gxr,
 
     return 1;
 }
+
+//! Apply free surface bc for 2 demension simulation
+int sjapplyfreebc2d(float **fp, float **cp, float **pp, int nxb, int nzb, int nb, int marg) {
+    int ix, iz;
+    for (ix = 0; ix < nxb; ++ix) {
+        for (iz = 0; iz < nb + marg; iz++) {
+            fp[ix][iz] = 0.0;
+            cp[ix][iz] = 0.0;
+            pp[ix][iz] = 0.0;
+        }
+    }
+
+}

@@ -593,10 +593,11 @@ typedef struct {
     float ds;
     int ycutdirect;
     int ycalscatter;
+	int yfreebc;
     int ydetails;
     int rtmopt;
     int niter;
-    int maxshift;
+    int maxshift;	
 } sjsoption;
 
 #include "sjabc.h"

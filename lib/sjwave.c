@@ -216,6 +216,8 @@ void sjafor2d(sjssurvey *sur, sjsgeology *geo, sjswave *wav, sjsoption *opt) {
 
         //! Boundary condition
         sjapplythabc2d(p2, p1, p0, gxl, gxr, gzu, gzb, nxb, nzb, nb, marg);
+        if(opt->yfreebc==1) 
+            sjapplyfreebc2d(p2, p1, p0, nxb, nzb, nb, marg);
 
         //! Record
         for (ir = 0; ir < nr; ir++)

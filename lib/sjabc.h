@@ -27,4 +27,7 @@ int sjinitthabc2d(float **vp, float **vs, float ds, float dt, int nxb, int nzb,
 int sjapplythabc2d(float **fp, float **cp, float **pp, float **gxl, float **gxr, float **gzu, float **gzb,
                    int nxb, int nzb, int nb, int marg);
 
+//! Apply free surface bc for 2 demension simulation
+int sjapplyfreebc2d(float **fp, float **cp, float **pp, int nxb, int nzb, int nb, int marg);
+
 #endif //SJI_SJABC_H

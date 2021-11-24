@@ -1,0 +1,7 @@
+3.2-git	sfsuread	SeismicAdjointImaging/demos/multiple:	housian@dell	Fri Oct  1 11:09:40 2021
+
+	n2=602301
+	data_format="native_int"
+	esize=4
+	in="/var/tmp/tfile@"
+	n1=91

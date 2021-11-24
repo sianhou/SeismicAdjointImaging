@@ -78,12 +78,25 @@ int main(int argc, char *argv[]) {
                        sur.sx + sur.x0, sur.sz + sur.z0,
                        sur.rx[0] + sur.x0, sur.rx[sur.nr - 1] + sur.x0,
                        sur.rz[0] + sur.z0, sur.rz[sur.nr - 1] + sur.z0);
+                if (opt.ysnap==1) {
+                    char *tmpfile = (char *) sjalloc1d(2048, sizeof(char));
+                    sprintf(tmpfile, "%s-snap-%d", wav.profzfile, is);
+                    sjwritesuall(wav.fwz2d[0][0], opt.nsnap * sur.nx, sur.nz, opt.dt, tmpfile);
+                    sjfree1d(tmpfile);
+                }
 
                 for (mpiid = 1; mpiid < nrank; mpiid++)
                     if ((is + mpiid) < sur.ns) {
                         MPI_Recv(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, mpiid, 99, MPI_COMM_WORLD, &stauts);
                         //! Output in rank != 0
                         sjwritesu(wav.profz[0], sur.nr, opt.nt, sizeof(float), opt.dt, is + mpiid, wav.profzfile);
+
+                        if (opt.ysnap==1) {
+                            char *tmpfile = (char *) sjalloc1d(2048, sizeof(char));
+                            sprintf(tmpfile, "%s-snap-%d", wav.profzfile, is+mpiid);
+                            sjwritesuall(wav.fwz2d[0][0], opt.nsnap * sur.nx, sur.nz, opt.dt, tmpfile);
+                            sjfree1d(tmpfile);
+                        }
                     }
             } else {
                 MPI_Send(wav.profz[0], sur.nr * opt.nt, MPI_FLOAT, 0, 99, MPI_COMM_WORLD);

@@ -595,6 +595,7 @@ typedef struct {
     int ycalscatter;
 	int yfreebc;
     int ydetails;
+	int ysnap;
     int rtmopt;
     int niter;
     int maxshift;	
